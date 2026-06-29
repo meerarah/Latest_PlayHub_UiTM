@@ -1,0 +1,53 @@
+@import url('https://fonts.googleapis.com/css2?family=Outfit:wght@100..900&display=swap');
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+
+@theme {
+  --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
+  
+  /* Student/Main Theme */
+  --color-brand-primary: #5A2A82; /* UiTM Purple */
+  --color-brand-secondary: #F8F9FA; /* Ultra Light Grey */
+  --color-brand-accent: #E0E7FF; /* Light Indigo */
+  --color-brand-warm: #FFFFFF; /* Pure White Background */
+  --color-brand-deep: #312E81; /* Indigo Deep Text */
+
+  /* Admin Theme */
+  --color-admin-base: #C8BAC7;    /* Outer muted purple */
+  --color-admin-panel: #F5EFEB;   /* Warm beige main container */
+  --color-admin-card: #E8DEE3;    /* Inner lilac cards */
+  --color-admin-accent: #9A8396;  /* Deeper purple accent */
+  --color-admin-text: #453643;    /* Deep plum text */
+}
+
+body {
+  background-color: var(--color-brand-warm);
+  color: var(--color-brand-deep);
+  font-family: var(--font-sans);
+  -webkit-font-smoothing: antialiased;
+}
+
+.human-card {
+  background: #ffffff;
+  border: 1px solid rgba(90, 42, 130, 0.15);
+  border-radius: 24px;
+  transition: all 0.2s ease-in-out;
+}
+
+.human-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 25px -5px rgba(90, 42, 130, 0.25);
+}
+
+.warm-shadow {
+  box-shadow: 0 15px 35px -10px rgba(90, 42, 130, 0.25);
+}
+
+.pill-button {
+  border-radius: 9999px;
+  transition: all 0.2s ease;
+}
+
+.pill-button:active {
+  transform: scale(0.96);
+}
