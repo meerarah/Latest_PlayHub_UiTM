@@ -118,9 +118,14 @@ export default function TournamentDetails() {
     if (!phone.trim()) return alert("Please enter a contact phone number.");
 
     // Validate roster inputs
+    const isNumericTen = /^\d{10}$/;
     for (let i = 0; i < members.length; i++) {
-       if (!members[i].fullname.trim() || !members[i].matrixId.trim()) {
+       const cleanMatrixId = members[i].matrixId.trim();
+       if (!members[i].fullname.trim() || !cleanMatrixId) {
           return alert(`Please fill in both name and Matrix ID for Player ${i + 1}`);
+       }
+       if (!isNumericTen.test(cleanMatrixId)) {
+          return alert(`Invalid Matrix ID for Player ${i + 1}. It must contain only numbers and be exactly 10 digits long.`);
        }
     }
 

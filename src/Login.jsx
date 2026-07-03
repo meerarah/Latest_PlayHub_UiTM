@@ -26,6 +26,14 @@ export default function Login() {
     try {
       if (isSignUp) {
         // Only students can sign up manually - enforced here
+        const cleanMatrixId = matrixId.trim();
+        const isNumericTen = /^\d{10}$/;
+        if (!isNumericTen.test(cleanMatrixId)) {
+          alert("Invalid Student ID. It must contain only numbers and be exactly 10 digits long.");
+          setLoading(false);
+          return;
+        }
+        
         const userCredential = await createUserWithEmailAndPassword(auth, email, password);
         const firebaseUser = userCredential.user;
         

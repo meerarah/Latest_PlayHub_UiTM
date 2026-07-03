@@ -271,6 +271,12 @@ export default function Profile() {
    
   const handleSaveProfile = async () => {
     if (!editName.trim()) return;
+    const cleanMatrixId = editMatrixId.trim();
+    const isNumericTen = /^\d{10}$/;
+    if (!isNumericTen.test(cleanMatrixId)) {
+      alert("Invalid Student ID. It must contain only numbers and be exactly 10 digits long.");
+      return;
+    }
     setIsSavingName(true);
     try {
        await setDoc(doc(db, 'users', user.uid), {

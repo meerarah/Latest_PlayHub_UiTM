@@ -165,6 +165,13 @@ export default function CourtAvailability() {
 
   // Processes and submits the booking or join reservation to Firestore
   const handleBooking = async () => {
+    const cleanMatrixId = formData.matrixId.trim();
+    const isNumericTen = /^\d{10}$/;
+    if (!isNumericTen.test(cleanMatrixId)) {
+      alert("Invalid Student ID. It must contain only numbers and be exactly 10 digits long.");
+      return;
+    }
+
     setProcessing(true);
     try {
       let proofUrl = ""; // Placeholder for booking receipt/proof if required

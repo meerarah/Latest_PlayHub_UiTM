@@ -1,5 +1,5 @@
-import { useState } from "react";
-import { Home, CalendarClock, User, LogOut, Menu, X, Image as GalleryIcon, MessageSquare, Trophy, Map as MapIcon, Users } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Home, CalendarClock, User, LogOut, Menu, X, Image as GalleryIcon, MessageSquare, Trophy, Map as MapIcon, Users, Palette } from "lucide-react";
 import { cn } from "../lib/utils";
 import { auth } from "../lib/firebase";
 import { signOut } from "firebase/auth";
@@ -8,6 +8,22 @@ import { Outlet, NavLink, useNavigate, Link } from "react-router-dom";
 export default function StudentLayout() {
   const navigate = useNavigate();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem("student-theme") || "purple";
+  });
+  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+
+  useEffect(() => {
+    // Clean up old themes
+    document.documentElement.classList.remove("theme-pink", "theme-green", "theme-brown");
+    // Apply selected theme (if it's not the default purple theme)
+    if (theme && theme !== "purple") {
+      document.documentElement.classList.add(`theme-${theme}`);
+    }
+    return () => {
+      document.documentElement.classList.remove("theme-pink", "theme-green", "theme-brown");
+    };
+  }, [theme]);
   
   const bottomTabs = [
     { name: "Home", path: "/", icon: Home },
@@ -30,7 +46,7 @@ export default function StudentLayout() {
   };
 
   return (
-    <div className="min-h-screen bg-brand-warm pb-24 font-sans selection:bg-brand-primary selection:text-white overflow-x-hidden">
+    <div className="min-h-screen bg-brand-warm pb-24 font-sans selection:bg-brand-primary selection:text-white overflow-x-hidden theme-container">
       {/* Top Header */}
       <header className="bg-brand-warm px-6 py-5 sticky top-0 z-40 flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -48,13 +64,58 @@ export default function StudentLayout() {
             <span className="text-brand-primary hidden sm:inline">Hub</span>
           </h1>
         </div>
-        <button 
-           onClick={handleSignOut}
-           className="p-2.5 text-brand-deep/30 hover:text-brand-accent hover:bg-brand-accent/10 rounded-2xl transition-all flex items-center"
-           title="Sign Out"
-        >
-           <LogOut className="w-5 h-5" />
-        </button>
+        
+        {/* Right side controls */}
+        <div className="flex items-center space-x-2 relative">
+           <div className="relative">
+              <button
+                 onClick={() => setThemeMenuOpen(!themeMenuOpen)}
+                 className="p-2.5 text-brand-deep/50 hover:text-brand-primary hover:bg-slate-100 rounded-2xl transition-all flex items-center cursor-pointer"
+                 title="Choose Theme Color"
+              >
+                 <Palette className="w-5 h-5 text-brand-primary" />
+              </button>
+              
+              {themeMenuOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setThemeMenuOpen(false)} />
+                  <div className="absolute right-0 mt-2 w-48 bg-white border border-slate-100 rounded-3xl shadow-xl z-50 p-4 animate-in zoom-in-95 duration-100 space-y-2">
+                     <p className="text-[10px] font-black text-slate-400 uppercase tracking-widest pl-1 mb-2">Select Theme</p>
+                     {[
+                       { id: "purple", name: "Purple", color: "bg-[#5A2A82]" },
+                       { id: "pink", name: "Soft Pink", color: "bg-[#DB2777]" },
+                       { id: "green", name: "Sage Green", color: "bg-[#16A34A]" },
+                       { id: "brown", name: "Warm Brown", color: "bg-[#B45309]" }
+                     ].map((t) => (
+                       <button
+                         key={t.id}
+                         onClick={() => {
+                           setTheme(t.id);
+                           localStorage.setItem("student-theme", t.id);
+                           setThemeMenuOpen(false);
+                         }}
+                         className={cn(
+                           "flex items-center space-x-3 w-full px-3 py-2.5 rounded-2xl text-xs font-bold text-slate-700 hover:bg-slate-50 transition-colors text-left",
+                           theme === t.id && "bg-slate-50 text-brand-primary"
+                         )}
+                       >
+                         <div className={cn("w-4.5 h-4.5 rounded-full shadow-inner shrink-0", t.color)} />
+                         <span className="text-slate-800">{t.name}</span>
+                       </button>
+                     ))}
+                  </div>
+                </>
+              )}
+           </div>
+           
+           <button 
+              onClick={handleSignOut}
+              className="p-2.5 text-brand-deep/30 hover:text-brand-accent hover:bg-brand-accent/10 rounded-2xl transition-all flex items-center cursor-pointer"
+              title="Sign Out"
+           >
+              <LogOut className="w-5 h-5" />
+           </button>
+        </div>
       </header>
 
       {/* Sidebar Overlay */}

@@ -2,15 +2,47 @@
 @import "tailwindcss";
 @import "leaflet/dist/leaflet.css";
 
+:root {
+  --brand-primary: #5A2A82; /* UiTM Purple */
+  --brand-secondary: #F8F9FA; /* Ultra Light Grey */
+  --brand-accent: #E0E7FF; /* Light Indigo */
+  --brand-warm: #FFFFFF; /* Pure White Background */
+  --brand-deep: #312E81; /* Indigo Deep Text */
+}
+
+/* Soft Pink Theme */
+.theme-pink {
+  --brand-primary: #DB2777;
+  --brand-secondary: #FFF5F7;
+  --brand-accent: #FCE7F3;
+  --brand-deep: #831843;
+}
+
+/* Sage Green Theme */
+.theme-green {
+  --brand-primary: #16A34A;
+  --brand-secondary: #F4FBF7;
+  --brand-accent: #DCFCE7;
+  --brand-deep: #14532D;
+}
+
+/* Warm Brown Theme */
+.theme-brown {
+  --brand-primary: #B45309;
+  --brand-secondary: #FAF7F5;
+  --brand-accent: #FEF3C7;
+  --brand-deep: #451A03;
+}
+
 @theme {
   --font-sans: "Outfit", ui-sans-serif, system-ui, sans-serif;
   
   /* Student/Main Theme */
-  --color-brand-primary: #5A2A82; /* UiTM Purple */
-  --color-brand-secondary: #F8F9FA; /* Ultra Light Grey */
-  --color-brand-accent: #E0E7FF; /* Light Indigo */
-  --color-brand-warm: #FFFFFF; /* Pure White Background */
-  --color-brand-deep: #312E81; /* Indigo Deep Text */
+  --color-brand-primary: var(--brand-primary);
+  --color-brand-secondary: var(--brand-secondary);
+  --color-brand-accent: var(--brand-accent);
+  --color-brand-warm: var(--brand-warm);
+  --color-brand-deep: var(--brand-deep);
 
   /* Admin Theme */
   --color-admin-base: #C8BAC7;    /* Outer muted purple */
@@ -51,3 +83,5 @@ body {
 .pill-button:active {
   transform: scale(0.96);
 }
+
+
