@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, Heart, MessageCircle, Loader2, Plus, X, Upload } from "lucide-react";
+import { Camera, Heart, MessageCircle, Loader2, Plus, X, Upload, Trash2 } from "lucide-react";
 import { db, storage } from "./lib/firebase";
-import { collection, query, getDocs, addDoc, orderBy, serverTimestamp, doc, updateDoc, where } from "firebase/firestore";
+import { collection, query, getDocs, addDoc, orderBy, serverTimestamp, doc, updateDoc, where, deleteDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "./context/AuthContext";
 
@@ -167,6 +167,19 @@ export default function Gallery() {
     }
   };
 
+  const handleDeletePhoto = async (photoId) => {
+    if (!confirm("Are you sure you want to delete this photo entry from your diary?")) return;
+    try {
+      await deleteDoc(doc(db, 'photo_diaries', photoId));
+      setPhotos(prev => prev.filter(p => p.id !== photoId));
+      setSelectedPhoto(null);
+      alert("Photo entry deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting photo entry:", error);
+      alert("Failed to delete photo entry.");
+    }
+  };
+
   return (
     <div 
       className="space-y-6 p-6 pb-8 rounded-[36px] border shadow-sm animate-in fade-in slide-in-from-bottom-2 duration-500 relative"
@@ -303,13 +316,22 @@ export default function Gallery() {
                   </button>
                </div>
                <div className="p-6 space-y-3">
-                  <div>
-                     <p className="text-base font-black leading-relaxed font-sans" style={{ color: "#453643" }}>
-                        {selectedPhoto.caption}
-                     </p>
-                     <p className="text-[10px] mt-2 font-black uppercase tracking-wider" style={{ color: "#9A8396" }}>
-                        {selectedPhoto.timestamp ? new Date(selectedPhoto.timestamp.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now'}
-                     </p>
+                  <div className="flex justify-between items-start">
+                     <div className="flex-1 pr-4">
+                        <p className="text-base font-black leading-relaxed font-sans" style={{ color: "#453643" }}>
+                           {selectedPhoto.caption}
+                        </p>
+                        <p className="text-[10px] mt-2 font-black uppercase tracking-wider" style={{ color: "#9A8396" }}>
+                           {selectedPhoto.timestamp ? new Date(selectedPhoto.timestamp.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now'}
+                        </p>
+                     </div>
+                     <button
+                       onClick={() => handleDeletePhoto(selectedPhoto.id)}
+                       className="text-red-500 hover:text-red-700 p-2 hover:bg-red-50 rounded-xl transition-all active:scale-95 flex items-center justify-center shrink-0 border border-transparent hover:border-red-100"
+                       title="Delete Photo Entry"
+                     >
+                       <Trash2 className="w-5 h-5" />
+                     </button>
                   </div>
                </div>
             </div>

@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { Trophy, CheckCircle, XCircle, Loader2, User, Plus, X, Calendar as CalendarIcon, Award, Download } from "lucide-react";
+import { Trophy, CheckCircle, XCircle, Loader2, User, Plus, X, Calendar as CalendarIcon, Award, Download, Trash2 } from "lucide-react";
 import { db } from "./lib/firebase";
-import { collection, query, orderBy, getDocs, doc, updateDoc, getDoc, addDoc, serverTimestamp, where } from "firebase/firestore";
+import { collection, query, orderBy, getDocs, doc, updateDoc, getDoc, addDoc, serverTimestamp, where, deleteDoc } from "firebase/firestore";
 
 export default function AdminTournaments() {
   const [requests, setRequests] = useState([]);
@@ -292,6 +292,18 @@ export default function AdminTournaments() {
     }
   };
 
+  const handleDeleteTournament = async (id) => {
+    if (!confirm("Are you sure you want to delete this tournament? This action cannot be undone and will remove the tournament entirely.")) return;
+    try {
+      await deleteDoc(doc(db, "Tournaments", id));
+      setPublishedTournaments(prev => prev.filter(t => t.id !== id));
+      alert("Tournament deleted successfully!");
+    } catch (error) {
+      console.error("Error deleting tournament:", error);
+      alert("Failed to delete tournament.");
+    }
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in duration-500">
       <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-8 gap-4 bg-admin-card p-6 rounded-[32px] border border-white/40 shadow-xl shadow-admin-accent/5">
@@ -406,13 +418,26 @@ export default function AdminTournaments() {
             </div>
          ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-               {publishedTournaments.map((t) => (
+               {publishedTournaments.map((t) => {
+                  const isPast = t.date ? new Date(t.date + "T23:59:59") < new Date() : false;
+                  return (
                   <div key={t.id} className="bg-white/70 backdrop-blur-sm rounded-[32px] p-6 border border-white shadow-xl shadow-admin-accent/5 flex flex-col justify-between hover:shadow-2xl hover:-translate-y-1 transition-all duration-300">
                      <div>
                         <div className="flex justify-between items-start mb-4">
-                           <span className="px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider border bg-emerald-50 text-emerald-600 border-emerald-200">
-                              {t.status || 'active'}
+                           <span className={`px-3 py-1 rounded-xl text-[9px] font-black uppercase tracking-wider border ${
+                              isPast 
+                                ? 'bg-slate-100 text-slate-500 border-slate-200' 
+                                : 'bg-emerald-50 text-emerald-600 border-emerald-200'
+                           }`}>
+                              {isPast ? 'closed' : (t.status || 'active')}
                            </span>
+                           <button 
+                             onClick={() => handleDeleteTournament(t.id)}
+                             className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-xl transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-transparent hover:border-red-100"
+                             title="Delete Tournament"
+                           >
+                             <Trash2 className="w-3.5 h-3.5" />
+                           </button>
                         </div>
                         <h3 className="font-black text-admin-text text-lg leading-tight mb-1">{t.name}</h3>
                         <p className="text-[10px] text-admin-text/50 font-black uppercase tracking-wider mb-4">{t.date} • {t.sport}</p>
@@ -436,7 +461,7 @@ export default function AdminTournaments() {
                         </button>
                      </div>
                   </div>
-               ))}
+               )})}
             </div>
          )
       )}  {/* Unified Create Modal */}

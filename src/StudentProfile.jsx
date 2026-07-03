@@ -38,6 +38,34 @@ export default function Profile() {
   const [selectedMemberIndex, setSelectedMemberIndex] = useState(0);
   const [isGenerating, setIsGenerating] = useState(false);
   const certRef = useRef(null);
+  const containerRef = useRef(null);
+  const [scale, setScale] = useState(1);
+
+  useEffect(() => {
+    if (!selectedCert) return;
+    const handleResize = () => {
+      if (containerRef.current) {
+        const containerWidth = containerRef.current.clientWidth - 48;
+        const targetWidth = 800;
+        if (containerWidth < targetWidth) {
+          setScale(containerWidth / targetWidth);
+        } else {
+          setScale(1);
+        }
+      }
+    };
+    
+    handleResize();
+    const rafId = requestAnimationFrame(handleResize);
+    const timeoutId = setTimeout(handleResize, 100);
+    
+    window.addEventListener("resize", handleResize);
+    return () => {
+      window.removeEventListener("resize", handleResize);
+      cancelAnimationFrame(rafId);
+      clearTimeout(timeoutId);
+    };
+  }, [selectedCert]);
 
   // Settings Modal State
   const [showSettings, setShowSettings] = useState(false);
@@ -193,12 +221,33 @@ export default function Profile() {
   const downloadPDF = async () => {
     if (!certRef.current) return;
     setIsGenerating(true);
+    
+    // Create a container offscreen to hold the cloned certificate
+    const cloneContainer = document.createElement("div");
+    cloneContainer.style.position = "absolute";
+    cloneContainer.style.left = "-9999px";
+    cloneContainer.style.top = "-9999px";
+    cloneContainer.style.width = "800px";
+    cloneContainer.style.height = "540px";
+    cloneContainer.style.overflow = "hidden";
+    
+    // Clone the certificate node
+    const clone = certRef.current.cloneNode(true);
+    clone.style.transform = "none";
+    clone.style.position = "static";
+    clone.style.left = "auto";
+    clone.style.top = "auto";
+    
+    cloneContainer.appendChild(clone);
+    document.body.appendChild(cloneContainer);
+    
     try {
-      const canvas = await html2canvas(certRef.current, {
+      const canvas = await html2canvas(clone, {
         scale: 3,
         useCORS: true,
         backgroundColor: "#ffffff"
       });
+      
       const imgData = canvas.toDataURL("image/png");
       const pdf = new jsPDF("l", "mm", "a4");
       const pdfWidth = pdf.internal.pageSize.getWidth();
@@ -212,6 +261,10 @@ export default function Profile() {
       console.error("PDF generation failed:", error);
       alert("Failed to generate PDF: " + error.message);
     } finally {
+      // Clean up the DOM
+      if (document.body.contains(cloneContainer)) {
+        document.body.removeChild(cloneContainer);
+      }
       setIsGenerating(false);
     }
   };
@@ -443,84 +496,106 @@ export default function Profile() {
 
                  {/* Preview & Download Panel */}
                  <div className="flex-1 flex flex-col justify-between min-w-0">
-                    <div className="overflow-x-auto p-6 bg-slate-100 flex justify-center items-center">
-                        <div 
-                          ref={certRef} 
-                          className="relative w-full max-w-[800px] min-h-[540px] p-10 md:p-14 flex flex-col justify-between select-none shrink-0"
-                          style={{ 
-                             fontFamily: "Georgia, 'Times New Roman', serif",
-                             backgroundColor: "#ffffff",
-                             textAlign: "center",
-                             borderRadius: "1rem"
+                     <div 
+                       ref={containerRef}
+                       className="p-6 bg-slate-100 flex justify-center items-center overflow-hidden min-h-[300px] md:min-h-[580px]"
+                     >
+                        <div
+                          style={{
+                            width: `${800 * scale}px`,
+                            height: `${540 * scale}px`,
+                            display: "flex",
+                            alignItems: "center",
+                            justifyContent: "center",
+                            position: "relative",
+                            transition: "all 0.2s ease-out"
                           }}
                         >
-                           {/* Classic Double Border */}
-                           <div className="absolute inset-4 pointer-events-none" style={{ border: "4px solid rgba(217, 119, 6, 0.35)", borderRadius: "0.5rem" }} />
-                           <div className="absolute inset-5 pointer-events-none" style={{ border: "1px solid rgba(217, 119, 6, 0.2)", borderRadius: "0.375rem" }} />
-                           
-                           {/* Classic Corner Gold Ornaments */}
-                           <div className="absolute top-6 left-6 text-2xl font-bold select-none" style={{ color: "rgba(217, 119, 6, 0.4)" }}>✦</div>
-                           <div className="absolute top-6 right-6 text-2xl font-bold select-none" style={{ color: "rgba(217, 119, 6, 0.4)" }}>✦</div>
-                           <div className="absolute bottom-6 left-6 text-2xl font-bold select-none" style={{ color: "rgba(217, 119, 6, 0.4)" }}>✦</div>
-                           <div className="absolute bottom-6 right-6 text-2xl font-bold select-none" style={{ color: "rgba(217, 119, 6, 0.4)" }}>✦</div>
+                           <div 
+                             ref={certRef} 
+                             className="relative flex flex-col justify-between select-none shrink-0 p-14"
+                             style={{ 
+                                width: "800px",
+                                height: "540px",
+                                transform: `scale(${scale})`,
+                                transformOrigin: "top left",
+                                fontFamily: "Georgia, 'Times New Roman', serif",
+                                backgroundColor: "#ffffff",
+                                textAlign: "center",
+                                borderRadius: "1rem",
+                                position: "absolute",
+                                left: 0,
+                                top: 0
+                             }}
+                           >
+                              {/* Classic Double Border */}
+                              <div className="absolute inset-4 pointer-events-none" style={{ border: "4px solid rgba(217, 119, 6, 0.35)", borderRadius: "0.5rem" }} />
+                              <div className="absolute inset-5 pointer-events-none" style={{ border: "1px solid rgba(217, 119, 6, 0.2)", borderRadius: "0.375rem" }} />
+                              
+                              {/* Classic Corner Gold Ornaments */}
+                              <div className="absolute top-6 left-6 text-2xl font-bold select-none" style={{ color: "rgba(217, 119, 6, 0.4)" }}>✦</div>
+                              <div className="absolute top-6 right-6 text-2xl font-bold select-none" style={{ color: "rgba(217, 119, 6, 0.4)" }}>✦</div>
+                              <div className="absolute bottom-6 left-6 text-2xl font-bold select-none" style={{ color: "rgba(217, 119, 6, 0.4)" }}>✦</div>
+                              <div className="absolute bottom-6 right-6 text-2xl font-bold select-none" style={{ color: "rgba(217, 119, 6, 0.4)" }}>✦</div>
 
-                           <div className="relative z-10 flex flex-col justify-between h-full space-y-8 my-auto">
-                              {/* Header Section */}
-                              <div className="space-y-3">
-                                 <h4 className="text-lg md:text-xl font-bold tracking-widest uppercase" style={{ letterSpacing: '0.15em', color: "#1e293b" }}>
-                                    Universiti Teknologi MARA Shah Alam
-                                 </h4>
-                                 <div className="w-24 h-[1px] mx-auto" style={{ backgroundColor: "rgba(217, 119, 6, 0.3)" }} />
-                              </div>
-
-                              {/* Title Section */}
-                              <div className="space-y-1">
-                                 <h2 className="text-2xl md:text-3xl font-extrabold tracking-wide uppercase" style={{ color: "#d97706" }}>
-                                    Certificate of Participation
-                                 </h2>
-                                 <h3 className="text-sm md:text-base italic font-medium" style={{ color: "#64748b" }}>
-                                    (Sijil Penyertaan)
-                                 </h3>
-                              </div>
-
-                              {/* Certificate Body Wording */}
-                              <div className="max-w-2xl mx-auto px-4 space-y-4">
-                                 <p className="text-xs md:text-sm leading-relaxed" style={{ color: "#475569" }}>
-                                    This is to certify that
-                                 </p>
-                                 
-                                 <h3 className="text-xl md:text-2xl font-bold inline-block px-6" style={{ color: "#0f172a", borderBottom: "1.5px solid #e2e8f0", paddingBottom: "0.375rem" }}>
-                                    {getCertName()}
-                                 </h3>
-                                 
-                                 <p className="text-xs md:text-sm font-semibold" style={{ color: "#334155" }}>
-                                    ID NO: {getCertMatrix()}
-                                 </p>
-                                 
-                                 <p className="text-xs md:text-sm leading-relaxed max-w-xl mx-auto" style={{ color: "#475569" }}>
-                                    has actively participated in the <span className="font-bold" style={{ color: "#0f172a" }}>{selectedCert.Sport_event?.sportname}</span> event.
-                                 </p>
-                                 
-                                 <p className="text-[10px] md:text-xs" style={{ color: "#475569" }}>
-                                    Held on <span className="font-semibold" style={{ color: "#0f172a" }}>{selectedCert.Sport_event?.date}</span> at <span className="font-semibold" style={{ color: "#0f172a" }}>Kompleks Sukan UiTM Shah Alam</span>.
-                                 </p>
-                              </div>
-
-                              {/* Bottom Footer Section */}
-                              <div className="flex justify-between items-end pt-4 px-6 text-[10px]" style={{ color: "#64748b" }}>
-                                 <div className="text-left space-y-1">
-                                    <div className="w-28 h-[1px]" style={{ backgroundColor: "#cbd5e1" }} />
-                                    <p className="font-bold" style={{ color: "#1e293b" }}>PlayHub Sports Unit</p>
-                                    <p>UiTM Shah Alam</p>
+                              <div className="relative z-10 flex flex-col justify-between h-full space-y-8 my-auto">
+                                 {/* Header Section */}
+                                 <div className="space-y-3">
+                                    <h4 className="text-xl font-bold tracking-widest uppercase" style={{ letterSpacing: '0.15em', color: "#1e293b" }}>
+                                       Universiti Teknologi MARA Shah Alam
+                                    </h4>
+                                    <div className="w-24 h-[1px] mx-auto" style={{ backgroundColor: "rgba(217, 119, 6, 0.3)" }} />
                                  </div>
-                                 <div className="text-right space-y-1">
-                                    <p className="font-bold" style={{ color: "#1e293b" }}>Certificate ID</p>
-                                    <p className="font-mono text-[9px] font-bold uppercase" style={{ color: "#b45309" }}>{selectedCert.id.substring(0, 12)}</p>
+
+                                 {/* Title Section */}
+                                 <div className="space-y-1">
+                                    <h2 className="text-3xl font-extrabold tracking-wide uppercase" style={{ color: "#d97706" }}>
+                                       Certificate of Participation
+                                    </h2>
+                                    <h3 className="text-base italic font-medium" style={{ color: "#64748b" }}>
+                                       (Sijil Penyertaan)
+                                    </h3>
+                                 </div>
+
+                                 {/* Certificate Body Wording */}
+                                 <div className="max-w-2xl mx-auto px-4 space-y-4">
+                                    <p className="text-sm leading-relaxed" style={{ color: "#475569" }}>
+                                       This is to certify that
+                                    </p>
+                                    
+                                    <h3 className="text-2xl font-bold inline-block px-6" style={{ color: "#0f172a", borderBottom: "1.5px solid #e2e8f0", paddingBottom: "0.375rem" }}>
+                                       {getCertName()}
+                                    </h3>
+                                    
+                                    <p className="text-sm font-semibold" style={{ color: "#334155" }}>
+                                       ID NO: {getCertMatrix()}
+                                    </p>
+                                    
+                                    <p className="text-sm leading-relaxed max-w-xl mx-auto" style={{ color: "#475569" }}>
+                                       has actively participated in the <span className="font-bold" style={{ color: "#0f172a" }}>{selectedCert.Sport_event?.sportname}</span> event.
+                                    </p>
+                                    
+                                    <p className="text-xs" style={{ color: "#475569" }}>
+                                       Held on <span className="font-semibold" style={{ color: "#0f172a" }}>{selectedCert.Sport_event?.date}</span> at <span className="font-semibold" style={{ color: "#0f172a" }}>Kompleks Sukan UiTM Shah Alam</span>.
+                                    </p>
+                                 </div>
+
+                                 {/* Bottom Footer Section */}
+                                 <div className="flex justify-between items-end pt-4 px-6 text-[10px]" style={{ color: "#64748b" }}>
+                                    <div className="text-left space-y-1">
+                                       <div className="w-28 h-[1px]" style={{ backgroundColor: "#cbd5e1" }} />
+                                       <p className="font-bold" style={{ color: "#1e293b" }}>PlayHub Sports Unit</p>
+                                       <p>UiTM Shah Alam</p>
+                                    </div>
+                                    <div className="text-right space-y-1">
+                                       <p className="font-bold" style={{ color: "#1e293b" }}>Certificate ID</p>
+                                       <p className="font-mono text-[9px] font-bold uppercase" style={{ color: "#b45309" }}>{selectedCert.id.substring(0, 12)}</p>
+                                    </div>
                                  </div>
                               </div>
                            </div>
                         </div>
-                    </div>
+                     </div>
 
                     {/* Download Action Bar */}
                      <div className="bg-brand-deep p-6 px-10 flex flex-col md:flex-row items-center justify-between gap-4">
