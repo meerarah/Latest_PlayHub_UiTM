@@ -70,7 +70,8 @@ export default function AdminDashboard() {
     difficultyLevel: "Beginner",
     courtName: "",
     courtSport: "Futsal",
-    courtCapacity: ""
+    courtCapacity: "",
+    courtImage: ""
   });
   
   // Participant Management State
@@ -225,10 +226,22 @@ export default function AdminDashboard() {
   const resetForm = () => {
     setFormData({
       sportName: "", venue: "", date: "", time: "", maxPlayers: "", difficultyLevel: "Beginner",
-      courtName: "", courtSport: "Futsal", courtCapacity: ""
+      courtName: "", courtSport: "Futsal", courtCapacity: "", courtImage: ""
     });
     setEditingItem(null);
     setShowModal(false);
+  };
+
+  const handleEditCourt = (c) => {
+    setEditingItem(c);
+    setFormData({
+      sportName: "", venue: "", date: "", time: "", maxPlayers: "", difficultyLevel: "Beginner",
+      courtName: c.name || "",
+      courtSport: c.sport || "Futsal",
+      courtCapacity: c.capacity || "",
+      courtImage: c.image || ""
+    });
+    setShowModal(true);
   };
 
   const fetchParticipants = async (event) => {
@@ -351,14 +364,20 @@ export default function AdminDashboard() {
           name: formData.courtName,
           sport: formData.courtSport,
           capacity: parseInt(formData.courtCapacity),
-          image: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80" // Default
+          image: formData.courtImage.trim() || "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80"
         };
-        await addDoc(collection(db, 'courts'), payload);
+        if (editingItem) {
+          await updateDoc(doc(db, 'courts', editingItem.id), payload);
+          alert("Facility updated successfully!");
+        } else {
+          await addDoc(collection(db, 'courts'), payload);
+          alert("Facility added successfully!");
+        }
       }
       resetForm();
       fetchDashboardData();
     } catch (err) {
-      alert("Error saving study data");
+      alert("Error saving data: " + err.message);
     } finally {
       setCreating(false);
     }
@@ -510,12 +529,22 @@ export default function AdminDashboard() {
                       <span className="absolute top-4 left-4 px-3 py-1 bg-white/90 text-admin-text font-black text-[9px] uppercase tracking-widest rounded-lg shadow-sm">
                         {c.sport}
                       </span>
-                      <button 
-                        onClick={() => handleDelete('courts', c.id)} 
-                        className="absolute top-4 right-4 p-2.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition-all shadow-md"
-                      >
-                        <Trash2 className="w-4 h-4" />
-                      </button>
+                      <div className="absolute top-4 right-4 flex space-x-1.5 animate-in fade-in">
+                        <button 
+                          onClick={() => handleEditCourt(c)} 
+                          className="p-2.5 bg-white hover:bg-slate-100 text-admin-text rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center border border-transparent"
+                          title="Edit Facility"
+                        >
+                          <Edit2 className="w-4 h-4 text-admin-text" />
+                        </button>
+                        <button 
+                          onClick={() => handleDelete('courts', c.id)} 
+                          className="p-2.5 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition-all shadow-md cursor-pointer flex items-center justify-center border border-transparent"
+                          title="Delete Facility"
+                        >
+                          <Trash2 className="w-4 h-4" />
+                        </button>
+                      </div>
                     </div>
                     <div className="p-6">
                       {c.arena && <p className="text-[9px] font-black text-admin-accent uppercase tracking-widest mb-1">{c.arena}</p>}
@@ -621,7 +650,9 @@ export default function AdminDashboard() {
         <div className="fixed inset-0 bg-admin-text/60 backdrop-blur-xl z-50 flex items-center justify-center p-4">
            <div className="bg-admin-panel border border-white/60 rounded-[40px] w-full max-w-lg shadow-2xl p-8 animate-in zoom-in-95 duration-200">
               <div className="flex justify-between items-center mb-8">
-                 <h3 className="font-black text-2xl text-admin-text uppercase tracking-tight">Add {activeTab === "events" ? "New Event" : "Facility Court"}</h3>
+                 <h3 className="font-black text-2xl text-admin-text uppercase tracking-tight">
+                   {editingItem ? "Edit" : "Add"} {activeTab === "events" ? "New Event" : "Facility Court"}
+                 </h3>
                  <button onClick={resetForm} className="text-admin-text/50 hover:bg-admin-card hover:text-admin-text p-2.5 rounded-2xl transition-colors"><X className="w-6 h-6" /></button>
               </div>
               
@@ -668,6 +699,10 @@ export default function AdminDashboard() {
                         <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Max Player Capacity</label>
                         <input required type="number" placeholder="4" value={formData.courtCapacity} onChange={e => setFormData({...formData, courtCapacity: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-admin-accent text-admin-text placeholder:text-admin-text/30 font-bold" />
                       </div>
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Facility Photo Image URL</label>
+                      <input type="text" placeholder="e.g. https://images.unsplash.com/..." value={formData.courtImage} onChange={e => setFormData({...formData, courtImage: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-admin-accent text-admin-text placeholder:text-admin-text/30 font-bold" />
                     </div>
                   </>
                 )}

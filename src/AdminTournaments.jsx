@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { Trophy, CheckCircle, XCircle, Loader2, User, Plus, X, Calendar as CalendarIcon, Award, Download, Trash2 } from "lucide-react";
+import { Trophy, CheckCircle, XCircle, Loader2, User, Plus, X, Calendar as CalendarIcon, Award, Download, Trash2, Edit2 } from "lucide-react";
 import { db } from "./lib/firebase";
 import { collection, query, orderBy, getDocs, doc, updateDoc, getDoc, addDoc, serverTimestamp, where, deleteDoc } from "firebase/firestore";
 
@@ -12,6 +12,7 @@ export default function AdminTournaments() {
   const [formData, setFormData] = useState({
     name: "", sport: "Futsal", date: "", time: "", venue: "", maxTeams: 8, description: "", requestId: null
   });
+  const [editingItem, setEditingItem] = useState(null);
 
   // Published Tournaments & Registrations States
   const [activeSubTab, setActiveSubTab] = useState("requests"); // "requests" | "published"
@@ -248,6 +249,7 @@ export default function AdminTournaments() {
   };
 
   const openCreateModal = (req = null) => {
+    setEditingItem(null);
     if (req) {
       setFormData({
         name: `${req.sport} Tournament`,
@@ -267,26 +269,51 @@ export default function AdminTournaments() {
     setShowModal(true);
   };
 
+  const handleEditTournament = (t) => {
+    setEditingItem(t);
+    setFormData({
+      name: t.name || "",
+      sport: t.sport || "Futsal",
+      date: t.date || "",
+      time: t.time || "09:00",
+      venue: t.venue || "",
+      maxTeams: t.maxTeams || 8,
+      description: t.description || "",
+      requestId: t.requestId || null
+    });
+    setShowModal(true);
+  };
+
   const handleCreateTournament = async (e) => {
     e.preventDefault();
-    setProcessing("creating");
+    setProcessing(editingItem ? "updating" : "creating");
     try {
-      await addDoc(collection(db, "Tournaments"), {
-        ...formData,
-        status: "active",
-        createdAt: serverTimestamp()
-      });
+      if (editingItem) {
+        await updateDoc(doc(db, "Tournaments", editingItem.id), {
+          ...formData,
+          updatedAt: serverTimestamp()
+        });
+        alert("Tournament updated successfully!");
+      } else {
+        await addDoc(collection(db, "Tournaments"), {
+          ...formData,
+          status: "active",
+          createdAt: serverTimestamp()
+        });
 
-      if (formData.requestId) {
-         await updateDoc(doc(db, "Tournament_Requests", formData.requestId), { status: 'approved' });
-         setRequests(prev => prev.map(r => r.id === formData.requestId ? { ...r, status: 'approved' } : r));
+        if (formData.requestId) {
+           await updateDoc(doc(db, "Tournament_Requests", formData.requestId), { status: 'approved' });
+           setRequests(prev => prev.map(r => r.id === formData.requestId ? { ...r, status: 'approved' } : r));
+        }
+        alert("Tournament created successfully!");
       }
 
       setShowModal(false);
-      alert("Tournament created successfully!");
+      setEditingItem(null);
+      fetchPublishedTournaments();
     } catch (error) {
       console.error(error);
-      alert("Failed to create tournament.");
+      alert(`Failed to ${editingItem ? 'update' : 'create'} tournament.`);
     } finally {
       setProcessing(null);
     }
@@ -431,13 +458,22 @@ export default function AdminTournaments() {
                            }`}>
                               {isPast ? 'closed' : (t.status || 'active')}
                            </span>
-                           <button 
-                             onClick={() => handleDeleteTournament(t.id)}
-                             className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-xl transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-transparent hover:border-red-100"
-                             title="Delete Tournament"
-                           >
-                             <Trash2 className="w-3.5 h-3.5" />
-                           </button>
+                            <div className="flex space-x-1 animate-in fade-in">
+                               <button 
+                                 onClick={() => handleEditTournament(t)}
+                                 className="text-admin-text hover:text-admin-accent p-1.5 hover:bg-admin-card rounded-xl transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-transparent hover:border-admin-card"
+                                 title="Edit Tournament"
+                               >
+                                 <Edit2 className="w-3.5 h-3.5" />
+                               </button>
+                               <button 
+                                 onClick={() => handleDeleteTournament(t.id)}
+                                 className="text-red-500 hover:text-red-700 p-1.5 hover:bg-red-50 rounded-xl transition-all active:scale-95 cursor-pointer flex items-center justify-center border border-transparent hover:border-red-100"
+                                 title="Delete Tournament"
+                               >
+                                 <Trash2 className="w-3.5 h-3.5" />
+                               </button>
+                            </div>
                         </div>
                         <h3 className="font-black text-admin-text text-lg leading-tight mb-1">{t.name}</h3>
                         <p className="text-[10px] text-admin-text/50 font-black uppercase tracking-wider mb-4">{t.date} • {t.sport}</p>
@@ -468,12 +504,12 @@ export default function AdminTournaments() {
       {showModal && (
         <div className="fixed inset-0 bg-admin-text/60 backdrop-blur-xl z-50 flex items-center justify-center p-4">
            <div className="bg-admin-panel border border-white/60 rounded-[40px] w-full max-w-lg shadow-2xl p-8 animate-in zoom-in-95 duration-200">
-              <div className="flex justify-between items-center mb-8">
-                 <h3 className="font-black text-2xl text-admin-text uppercase tracking-tight">
-                    {formData.requestId ? "Approve & Key In" : "New Tournament"}
-                 </h3>
-                 <button onClick={() => setShowModal(false)} className="text-admin-text/50 hover:bg-admin-card p-2.5 rounded-2xl transition-colors"><X className="w-6 h-6" /></button>
-              </div>
+                  <div className="flex justify-between items-center mb-8">
+                     <h3 className="font-black text-2xl text-admin-text uppercase tracking-tight">
+                        {editingItem ? "Edit Tournament" : (formData.requestId ? "Approve & Key In" : "New Tournament")}
+                     </h3>
+                     <button onClick={() => { setShowModal(false); setEditingItem(null); }} className="text-admin-text/50 hover:bg-admin-card p-2.5 rounded-2xl transition-colors"><X className="w-6 h-6" /></button>
+                  </div>
               
               <form onSubmit={handleCreateTournament} className="space-y-4">
                  <div className="space-y-1">
