@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Trophy, Send, Loader2, Calendar as CalendarIcon, Users, FileText } from "lucide-react";
+import { Trophy, Send, Loader2, Calendar as CalendarIcon, Users, FileText, Upload } from "lucide-react";
 import { db } from "./lib/firebase";
 import { collection, addDoc, serverTimestamp } from "firebase/firestore";
 import { useAuth } from "./context/AuthContext";
@@ -18,9 +18,37 @@ export default function TournamentRequest() {
     description: "",
   });
 
+  // Uploaded document state variables
+  const [docFileName, setDocFileName] = useState("");
+  const [docBase64, setDocBase64] = useState("");
+
+  const handleFileChange = (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+
+    // Check size limit: Firestore document size limit is 1MB, so we cap base64 size at 800KB
+    if (file.size > 800 * 1024) {
+      alert("File is too large. Please select a document smaller than 800 KB.");
+      e.target.value = null; // Reset input element
+      return;
+    }
+
+    setDocFileName(file.name);
+    const reader = new FileReader();
+    reader.onloadend = () => {
+      setDocBase64(reader.result);
+    };
+    reader.readAsDataURL(file);
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!user) return alert("Please sign in first.");
+
+    if (!docBase64) {
+      alert("Please upload a supporting document to hold the tournament.");
+      return;
+    }
 
     setLoading(true);
     try {
@@ -28,6 +56,8 @@ export default function TournamentRequest() {
         ...formData,
         studentId: user.uid,
         status: "pending", // admin needs to review and key in
+        documentName: docFileName,
+        documentBase64: docBase64,
         createdAt: serverTimestamp(),
       });
       setSuccess(true);
@@ -47,7 +77,7 @@ export default function TournamentRequest() {
         </div>
         <h2 className="text-3xl font-black text-brand-deep mb-2">Request Sent!</h2>
         <p className="text-slate-500 mb-8">
-          The Admin will review your request and key in the tournament. You'll be notified soon.
+          The Admin will review your request, check the uploaded supporting document, and key in the tournament. You'll be notified soon.
         </p>
         <button
           onClick={() => navigate("/")}
@@ -126,6 +156,33 @@ export default function TournamentRequest() {
               onChange={(e) => setFormData({...formData, description: e.target.value})}
               className="w-full bg-slate-50 border border-slate-200 rounded-2xl pl-12 pr-5 py-4 outline-none focus:ring-2 focus:ring-brand-primary font-bold text-slate-700 resize-none"
              />
+          </div>
+        </div>
+
+        {/* Supporting Document Upload */}
+        <div>
+          <label className="text-[10px] font-black uppercase tracking-widest text-brand-primary ml-2 mb-2 block">
+            Supporting Document (Required, Max 800KB)
+          </label>
+          <div className="relative border-2 border-dashed border-slate-200 hover:border-brand-primary rounded-2xl p-6 transition-all bg-slate-50 flex flex-col items-center justify-center cursor-pointer group">
+             <input 
+               type="file" 
+               accept=".pdf,.doc,.docx,.jpg,.jpeg,.png"
+               onChange={handleFileChange}
+               className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+             />
+             <Upload className="w-8 h-8 text-slate-400 group-hover:text-brand-primary transition-colors mb-2" />
+             {docFileName ? (
+                <div className="text-center">
+                   <p className="text-sm font-bold text-brand-deep">{docFileName}</p>
+                   <p className="text-[10px] text-slate-400 uppercase font-black mt-1">Click or drag to change file</p>
+                </div>
+             ) : (
+                <div className="text-center">
+                   <p className="text-sm font-bold text-slate-500">Select supporting document</p>
+                   <p className="text-[10px] text-slate-400 uppercase font-black mt-1">Accepts PDF, Word, or Images</p>
+                </div>
+             )}
           </div>
         </div>
 

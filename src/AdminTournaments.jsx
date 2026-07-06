@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import * as XLSX from "xlsx";
-import { Trophy, CheckCircle, XCircle, Loader2, User, Plus, X, Calendar as CalendarIcon, Award, Download, Trash2, Edit2 } from "lucide-react";
+import { Trophy, CheckCircle, XCircle, Loader2, User, Plus, X, Calendar as CalendarIcon, Award, Download, Trash2, Edit2, FileText } from "lucide-react";
 import { db } from "./lib/firebase";
 import { collection, query, orderBy, getDocs, doc, updateDoc, getDoc, addDoc, serverTimestamp, where, deleteDoc } from "firebase/firestore";
 
@@ -400,6 +400,23 @@ export default function AdminTournaments() {
                       {req.description || "No description provided."}
                     </p>
                   </div>
+
+                  {req.documentBase64 ? (
+                    <div className="mb-4">
+                      <a 
+                        href={req.documentBase64} 
+                        download={req.documentName || "supporting_document"}
+                        className="inline-flex items-center justify-center space-x-1.5 text-admin-accent hover:text-admin-accent/80 font-black text-[10px] uppercase tracking-wider bg-admin-accent/5 border border-admin-accent/20 px-3 py-2 rounded-xl transition-all shadow-sm w-full"
+                      >
+                        <FileText className="w-3.5 h-3.5" />
+                        <span className="truncate">View Document ({req.documentName || "Download"})</span>
+                      </a>
+                    </div>
+                  ) : (
+                    <div className="mb-4 text-center py-2.5 bg-admin-card/10 rounded-xl border border-white/40">
+                      <span className="text-[10px] text-admin-text/40 font-bold uppercase tracking-wider">No document uploaded</span>
+                    </div>
+                  )}
                 </div>
 
                 <div className="mt-4 pt-4 border-t border-slate-100">
