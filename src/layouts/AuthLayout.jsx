@@ -18,12 +18,6 @@ export default function AuthLayout() {
         <div className="relative">
           <Outlet />
         </div>
-
-        <div className="pt-8 pb-4 text-center">
-          <p className="text-[10px] text-brand-deep/40 font-black tracking-widest uppercase">
-            Powered by Student Excellence
-          </p>
-        </div>
       </div>
     </div>
   );
