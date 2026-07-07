@@ -46,9 +46,22 @@ app.get('/api/debug-db', async (req, res) => {
         'INSERT INTO users (id, fullname, email, role) VALUES (?, ?, ?, ?)',
         ['test_debug_id', 'Test User', 'test_debug@example.com', 'student']
       );
+      
+      try {
+        await pool.query(
+          'INSERT INTO students (userID, collegeName, residencyType, phoneNumber, matrixID) VALUES (?, ?, ?, ?, ?)',
+          ['test_debug_id', 'UiTM', null, null, null]
+        );
+      } catch (studentErr) {
+        testError = { stage: 'students', message: studentErr.message, code: studentErr.code, errno: studentErr.errno };
+      }
+      
+      await pool.query('DELETE FROM students WHERE userID = ?', ['test_debug_id']);
       await pool.query('DELETE FROM users WHERE id = ?', ['test_debug_id']);
     } catch (e) {
-      testError = { message: e.message, code: e.code, errno: e.errno, sqlState: e.sqlState };
+      if (!testError) {
+        testError = { stage: 'users', message: e.message, code: e.code, errno: e.errno };
+      }
     }
     
     res.json({ users, photos, testError });
