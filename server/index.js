@@ -37,34 +37,8 @@ app.get('/', (req, res) => {
 import pool from './db.js';
 app.get('/api/debug-db', async (req, res) => {
   try {
-    const [users] = await pool.query('SELECT id, fullname, email, role FROM users LIMIT 50');
-    const [photos] = await pool.query('SELECT photoID, caption, studentID FROM photo_diaries LIMIT 50');
-    
-    let testError = null;
-    try {
-      await pool.query(
-        'INSERT INTO users (id, fullname, email, role) VALUES (?, ?, ?, ?)',
-        ['test_debug_id', 'Test User', 'test_debug@example.com', 'student']
-      );
-      
-      try {
-        await pool.query(
-          'INSERT INTO students (userID, collegeName, residencyType, phoneNumber, matrixID) VALUES (?, ?, ?, ?, ?)',
-          ['test_debug_id', 'UiTM', null, null, null]
-        );
-      } catch (studentErr) {
-        testError = { stage: 'students', message: studentErr.message, code: studentErr.code, errno: studentErr.errno };
-      }
-      
-      await pool.query('DELETE FROM students WHERE userID = ?', ['test_debug_id']);
-      await pool.query('DELETE FROM users WHERE id = ?', ['test_debug_id']);
-    } catch (e) {
-      if (!testError) {
-        testError = { stage: 'users', message: e.message, code: e.code, errno: e.errno };
-      }
-    }
-    
-    res.json({ users, photos, testError });
+    const [tables] = await pool.query('SHOW TABLES');
+    res.json({ tables });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
