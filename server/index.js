@@ -33,6 +33,18 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to PlayHub Express MySQL API Backend!' });
 });
 
+// Temporary diagnostics endpoint
+import pool from './db.js';
+app.get('/api/debug-db', async (req, res) => {
+  try {
+    const [users] = await pool.query('SELECT id, fullname, email, role FROM users LIMIT 50');
+    const [photos] = await pool.query('SELECT photoID, caption, studentID FROM photo_diaries LIMIT 50');
+    res.json({ users, photos });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 // Start Server
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
