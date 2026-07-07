@@ -43,7 +43,10 @@ app.listen(PORT, async () => {
   // Auto-initialize MySQL schema and seed data
   try {
     console.log('🔄 Checking database tables...');
-    const schemaPath = path.join(process.cwd(), '../schema_mysql.sql');
+    let schemaPath = path.join(process.cwd(), 'schema_mysql.sql');
+    if (!fs.existsSync(schemaPath)) {
+      schemaPath = path.join(process.cwd(), '../schema_mysql.sql');
+    }
     if (!fs.existsSync(schemaPath)) {
       console.log('⏩ Schema file not found, skipping auto-init.');
       return;
