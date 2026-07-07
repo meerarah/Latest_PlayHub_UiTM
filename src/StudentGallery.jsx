@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from "react";
-import { Camera, Heart, MessageCircle, Loader2, Plus, X, Upload, Trash2 } from "lucide-react";
+import { Camera, Loader2, Plus, X, Upload, Trash2 } from "lucide-react";
 import { db, storage } from "./lib/firebase";
 import { collection, query, getDocs, addDoc, orderBy, serverTimestamp, doc, updateDoc, where, deleteDoc } from "firebase/firestore";
 import { ref, uploadBytes, getDownloadURL } from "firebase/storage";
 import { useAuth } from "./context/AuthContext";
+import { api } from "./lib/api";
 
 export default function Gallery() {
   const { user } = useAuth();
@@ -20,13 +21,6 @@ export default function Gallery() {
   
   // Instagram detail modal states
   const [selectedPhoto, setSelectedPhoto] = useState(null);
-  const [likedPhotos, setLikedPhotos] = useState(() => {
-    try {
-      return JSON.parse(localStorage.getItem('likedPhotos') || '[]');
-    } catch (e) {
-      return [];
-    }
-  });
 
   useEffect(() => {
     if (user?.uid) {
@@ -38,15 +32,7 @@ export default function Gallery() {
     if (!user?.uid) return;
     setLoading(true);
     try {
-      const q = query(collection(db, 'photo_diaries'), where('studentID', '==', user.uid));
-      const querySnapshot = await getDocs(q);
-      const data = querySnapshot.docs
-         .map(doc => ({ id: doc.id, ...doc.data() }))
-         .sort((a, b) => {
-            const timeA = a.timestamp?.seconds || 0;
-            const timeB = b.timestamp?.seconds || 0;
-            return timeB - timeA;
-         });
+      const data = await api.getPhotos(user.uid);
       setPhotos(data);
     } catch (error) {
       console.error("Error fetching photos:", error);
@@ -112,13 +98,11 @@ export default function Gallery() {
         photoUrl = photoPreview;
       }
 
-      // 2. Save to Firestore
-      await addDoc(collection(db, 'photo_diaries'), {
+      // 2. Save to MySQL
+      await api.createPhoto({
         photo_url: photoUrl,
         caption: newCaption,
-        studentID: user.uid,
-        likesCount: 0,
-        timestamp: serverTimestamp()
+        studentID: user.uid
       });
       
       setShowModal(false);
@@ -134,43 +118,12 @@ export default function Gallery() {
     }
   };
 
-  const handleLikeToggle = async (photo) => {
-    if (!user?.uid) return;
-    const isLiked = likedPhotos.includes(photo.id);
-    let newLikedList;
-    let newCount = photo.likesCount || 0;
 
-    if (isLiked) {
-      newLikedList = likedPhotos.filter(id => id !== photo.id);
-      newCount = Math.max(0, newCount - 1);
-    } else {
-      newLikedList = [...likedPhotos, photo.id];
-      newCount = newCount + 1;
-    }
-
-    setLikedPhotos(newLikedList);
-    localStorage.setItem('likedPhotos', JSON.stringify(newLikedList));
-
-    // Update locally in UI state immediately
-    setPhotos(prev => prev.map(p => p.id === photo.id ? { ...p, likesCount: newCount } : p));
-    if (selectedPhoto && selectedPhoto.id === photo.id) {
-      setSelectedPhoto(prev => ({ ...prev, likesCount: newCount }));
-    }
-
-    // Update in Firestore
-    try {
-      await updateDoc(doc(db, 'photo_diaries', photo.id), {
-        likesCount: newCount
-      });
-    } catch (error) {
-      console.error("Error updating likes in Firestore:", error);
-    }
-  };
 
   const handleDeletePhoto = async (photoId) => {
     if (!confirm("Are you sure you want to delete this photo entry from your diary?")) return;
     try {
-      await deleteDoc(doc(db, 'photo_diaries', photoId));
+      await api.deletePhoto(photoId);
       setPhotos(prev => prev.filter(p => p.id !== photoId));
       setSelectedPhoto(null);
       alert("Photo entry deleted successfully!");
@@ -178,6 +131,16 @@ export default function Gallery() {
       console.error("Error deleting photo entry:", error);
       alert("Failed to delete photo entry.");
     }
+  };
+
+  const formatPhotoDate = (ts) => {
+    if (!ts) return 'Just now';
+    if (ts.seconds) {
+      return new Date(ts.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
+    }
+    const parsed = new Date(ts);
+    if (isNaN(parsed.getTime())) return 'Just now';
+    return parsed.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' });
   };
 
   return (
@@ -227,7 +190,7 @@ export default function Gallery() {
                   <div className="absolute inset-0 bg-gradient-to-t from-black/85 via-black/35 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300 flex flex-col justify-end p-4">
                     <p className="text-white text-xs font-black drop-shadow-sm mb-1 leading-normal">{photo.caption}</p>
                     <p className="text-white/60 text-[9px] font-black uppercase tracking-wider">
-                       {photo.timestamp ? new Date(photo.timestamp.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now'}
+                       {formatPhotoDate(photo.timestamp)}
                     </p>
                   </div>
                 </div>
@@ -322,7 +285,7 @@ export default function Gallery() {
                            {selectedPhoto.caption}
                         </p>
                         <p className="text-[10px] mt-2 font-black uppercase tracking-wider" style={{ color: "#9A8396" }}>
-                           {selectedPhoto.timestamp ? new Date(selectedPhoto.timestamp.seconds * 1000).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'Just now'}
+                           {formatPhotoDate(selectedPhoto.timestamp)}
                         </p>
                      </div>
                      <button
