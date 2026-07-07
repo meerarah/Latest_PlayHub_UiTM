@@ -35,6 +35,24 @@ app.get('/', (req, res) => {
   res.json({ message: 'Welcome to PlayHub Express MySQL API Backend!' });
 });
 
+// Debug endpoint to check database status and tables
+app.get('/api/debug', async (req, res) => {
+  try {
+    const [tables] = await pool.query('SHOW TABLES');
+    const tableList = tables.map(t => Object.values(t)[0]);
+    res.json({
+      status: 'online',
+      cwd: process.cwd(),
+      schemaLocalExists: fs.existsSync(path.join(process.cwd(), 'schema_mysql.sql')),
+      schemaParentExists: fs.existsSync(path.join(process.cwd(), '../schema_mysql.sql')),
+      tablesCount: tableList.length,
+      tables: tableList
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message, stack: error.stack });
+  }
+});
+
 // Start Server
 app.listen(PORT, async () => {
   console.log(`🚀 Server running on http://localhost:${PORT}`);
