@@ -117,14 +117,12 @@ CREATE TABLE IF NOT EXISTS feedbacks (
 CREATE TABLE IF NOT EXISTS notifications (
     notificationID INT AUTO_INCREMENT PRIMARY KEY,
     userID VARCHAR(255) NOT NULL, -- FK referencing users (recipient)
-    adminID VARCHAR(255), -- FK referencing users (sender)
     title VARCHAR(255) NOT NULL,
     message TEXT,
     type VARCHAR(50) DEFAULT 'info', -- 'booking', 'event', 'info'
     status VARCHAR(50) DEFAULT 'unread', -- 'unread', 'read'
     createdAt DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (userID) REFERENCES users(id) ON DELETE CASCADE,
-    FOREIGN KEY (adminID) REFERENCES users(id) ON DELETE SET NULL
+    FOREIGN KEY (userID) REFERENCES users(id) ON DELETE CASCADE
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- 12. Photo Diaries Table (PHOTO DIARIES in ERD)

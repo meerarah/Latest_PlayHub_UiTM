@@ -12,7 +12,7 @@ router.get('/', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT notificationID AS id, userID, adminID, title, message, type, status, createdAt FROM notifications WHERE userID = ? ORDER BY createdAt DESC',
+      'SELECT notificationID AS id, userID, title, message, type, status, createdAt FROM notifications WHERE userID = ? ORDER BY createdAt DESC',
       [userId]
     );
 
