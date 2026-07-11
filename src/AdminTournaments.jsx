@@ -140,7 +140,7 @@ export default function AdminTournaments() {
           return;
        }
 
-       const headers = ["STUDENT NAME", "MATRIX ID", "PHONE NUMBER", "EVENT NAME", "SPORT CATEGORY", "RESIDENCY STATUS", "CERTIFICATE ID", "STATUS"];
+       const headers = ["STUDENT NAME", "MATRIX ID", "EVENT NAME", "SPORT CATEGORY", "RESIDENCY STATUS", "CERTIFICATE ID", "STATUS"];
        const rows = filtered.map(item => {
           const eventName = selectedT?.name || "Unknown Tournament";
           const sportCategory = getSportCategory(selectedT?.sport);
@@ -149,7 +149,6 @@ export default function AdminTournaments() {
           return [
              item.studentName.toUpperCase(),
              item.matrixId.toUpperCase(),
-             item.phone.toUpperCase(),
              eventName.toUpperCase(),
              sportCategory.toUpperCase(),
              residencyStr.toUpperCase(),
