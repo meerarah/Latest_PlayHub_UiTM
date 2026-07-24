@@ -50,12 +50,12 @@ export default function Home() {
     const mergedList = [];
     
     Object.values(groups).forEach(groupEvents => {
-      // Sort group events by slot value
-      const sorted = [...groupEvents].sort((a, b) => parseInt(a.slot) - parseInt(b.slot));
+      // Sort group events by slot value safely
+      const sorted = [...groupEvents].sort((a, b) => (parseInt(a.slot) || 0) - (parseInt(b.slot) || 0));
       
       let currentMerged = null;
       sorted.forEach(ev => {
-        const slotNum = parseInt(ev.slot);
+        const slotNum = parseInt(ev.slot) || 0;
         if (!currentMerged) {
           currentMerged = {
             ...ev,
@@ -114,13 +114,13 @@ export default function Home() {
       const regs = await api.getStudentEventRegistrations(user.uid);
       const myEvents = regs.map(r => ({
         id: String(r.sportid),
-        sportname: r.Sport_event.sportname,
-        venue: r.Sport_event.venue,
-        date: r.Sport_event.date,
-        time: r.Sport_event.time,
-        type: r.Sport_event.type,
-        slot: r.Sport_event.slot,
-        studentid: r.studentid,
+        sportname: r.Sport_event?.sportname || "Sport Session",
+        venue: r.Sport_event?.venue || "UiTM Court",
+        date: r.Sport_event?.date || "",
+        time: r.Sport_event?.time || "TBA",
+        type: r.Sport_event?.type || "full_court",
+        slot: r.Sport_event?.slot || 0,
+        studentid: r.studentid || r.studentId || user.uid,
         status: r.status
       }));
 

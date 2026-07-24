@@ -158,6 +158,50 @@ export default function AdminDashboard() {
      XLSX.writeFile(workbook, filename);
   };
 
+  const groupAdminBookings = (bookingsList) => {
+     if (!bookingsList || bookingsList.length === 0) return [];
+     
+     // Group by date, venue, studentid, type, status
+     const groups = {};
+     bookingsList.forEach(b => {
+        const key = `${b.date}_${b.venue}_${b.studentid}_${b.type}_${b.status}`;
+        if (!groups[key]) groups[key] = [];
+        groups[key].push(b);
+     });
+     
+     const merged = [];
+     Object.values(groups).forEach(groupBookings => {
+        const sorted = [...groupBookings].sort((a, b) => (parseInt(a.slot) || 0) - (parseInt(b.slot) || 0));
+        let current = null;
+        sorted.forEach(b => {
+           const slotNum = parseInt(b.slot) || 0;
+           if (!current) {
+              current = {
+                 ...b,
+                 slots: [slotNum],
+                 ids: [b.id]
+              };
+           } else {
+              const lastSlot = current.slots[current.slots.length - 1];
+              if (slotNum === lastSlot + 1) {
+                 current.slots.push(slotNum);
+                 current.ids.push(b.id);
+              } else {
+                 merged.push(current);
+                 current = {
+                    ...b,
+                    slots: [slotNum],
+                    ids: [b.id]
+                 };
+              }
+           }
+        });
+        if (current) merged.push(current);
+     });
+     
+     return merged;
+  };
+
   useEffect(() => {
     fetchDashboardData();
   }, [activeTab]);
@@ -182,7 +226,7 @@ export default function AdminDashboard() {
         setCourts(courtsData);
       } else if (activeTab === "bookings") {
         const data = await api.getEvents({ type: 'full_court,shared_session' });
-        setBookings(data);
+        setBookings(groupAdminBookings(data));
       }
     } catch (error) {
       console.error("Error fetching data:", error);
@@ -270,11 +314,12 @@ export default function AdminDashboard() {
     }
   };
 
-  const updateBookingStatus = async (id, status) => {
+  const updateBookingStatus = async (booking, status) => {
     if (!confirm(`Confirm mark booking as ${status}?`)) return;
     try {
-      await api.updateBookingStatus(id, status);
-      setBookings(prev => prev.map(b => b.id === id ? { ...b, status } : b));
+      const ids = booking.ids || [booking.id];
+      await Promise.all(ids.map(id => api.updateBookingStatus(id, status)));
+      fetchDashboardData();
     } catch (error) {
       alert("Failed to update status");
     }
@@ -549,7 +594,9 @@ export default function AdminDashboard() {
                           <MapPin className="w-4 h-4 mr-2 text-admin-accent" /> {b.venue}
                         </div>
                         <div className="flex items-center pl-6">Sport Category: {b.sportname}</div>
-                        <div className="flex items-center pl-6">Slot Booked: {b.date} @ {b.slot}:00</div>
+                        <div className="flex items-center pl-6">
+                          Slot Booked: {b.date} @ {b.slots ? `${b.slots[0]}:00 - ${b.slots[b.slots.length - 1] + 1}:00` : `${b.slot}:00`}
+                        </div>
                         <div className="pl-6 text-[9px] font-black text-admin-accent uppercase tracking-widest">
                           {b.type === 'full_court' ? "Full Booking" : "Shared Session"}
                         </div>
@@ -574,14 +621,14 @@ export default function AdminDashboard() {
                       {b.status === 'pending' && (
                         <div className="flex space-x-2">
                           <button 
-                            onClick={() => updateBookingStatus(b.id, 'active')} 
+                            onClick={() => updateBookingStatus(b, 'active')} 
                             className="bg-emerald-500 hover:bg-emerald-600 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer" 
                             title="Approve"
                           >
                             <CheckCircle2 className="w-4 h-4" />
                           </button>
                           <button 
-                            onClick={() => updateBookingStatus(b.id, 'rejected')} 
+                            onClick={() => updateBookingStatus(b, 'rejected')} 
                             className="bg-red-505 hover:bg-red-600 bg-red-500 text-white p-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-95 cursor-pointer" 
                             title="Reject"
                           >

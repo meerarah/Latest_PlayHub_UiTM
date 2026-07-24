@@ -50,12 +50,12 @@ export default function StudentJoinIn() {
                    group.date === session.date &&
                    group.studentid === session.studentid &&
                    group.maxplayers === session.maxplayers &&
-                   (group.currentPlayers || 1) === (session.currentPlayers || 1) &&
                    group.endSlot === session.slot;
         });
 
         if (existingGroupIndex !== -1) {
             groupedSessions[existingGroupIndex].endSlot = session.slot + 1;
+            groupedSessions[existingGroupIndex].currentPlayers = Math.max(groupedSessions[existingGroupIndex].currentPlayers || 1, session.currentPlayers || 1);
             groupedSessions[existingGroupIndex].events.push(session);
         } else {
             groupedSessions.push({
