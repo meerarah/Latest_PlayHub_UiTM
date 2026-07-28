@@ -1,4 +1,4 @@
-let baseUrl = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
+let baseUrl = import.meta.env.VITE_API_URL || 'https://playhub-backend-0o4e.onrender.com/api';
 if (baseUrl && !baseUrl.endsWith('/api') && !baseUrl.endsWith('/api/')) {
   baseUrl = baseUrl.replace(/\/$/, '') + '/api';
 }
