@@ -11,6 +11,7 @@ export default function StudentJoinIn() {
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedSport, setSelectedSport] = useState("All");
   const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   
   // Join Modal State
@@ -34,7 +35,6 @@ export default function StudentJoinIn() {
       const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
       const dd = String(todayObj.getDate()).padStart(2, '0');
       const today = `${yyyy}-${mm}-${dd}`;
-      const currentHour = todayObj.getHours();
       
       const available = data
         .filter(s => s.status !== 'rejected')
@@ -52,16 +52,15 @@ export default function StudentJoinIn() {
         }
       }
 
-      // Group contiguous sessions
+      // Group contiguous sessions cleanly by venue, sport, and date
       const groupedSessions = [];
       
       available.forEach(session => {
         const existingGroupIndex = groupedSessions.findIndex(group => {
-            return group.courtId === session.courtId &&
-                   group.date === session.date &&
-                   group.studentid === session.studentid &&
-                   group.maxplayers === session.maxplayers &&
-                   group.endSlot === session.slot;
+            const sameVenue = group.venue === session.venue;
+            const sameSport = (group.sportname || '').toLowerCase() === (session.sportname || '').toLowerCase();
+            const sameDate = group.date === session.date;
+            return sameVenue && sameSport && sameDate && group.endSlot === session.slot;
         });
 
         const isSessionJoined = joinedSportIds.has(session.id);
@@ -132,9 +131,13 @@ export default function StudentJoinIn() {
     }
   };
 
-  const filteredSessions = selectedDifficulty === "All"
-    ? sessions
-    : sessions.filter(s => (s.difficultylevel || "Beginner").toLowerCase() === selectedDifficulty.toLowerCase());
+  const sportsList = ["All", "Badminton", "Futsal", "Tennis", "Basketball", "Lawn Bowls", "Cricket"];
+
+  const filteredSessions = sessions.filter(s => {
+    const matchDiff = selectedDifficulty === "All" || (s.difficultylevel || "Beginner").toLowerCase() === selectedDifficulty.toLowerCase();
+    const matchSport = selectedSport === "All" || (s.sportname || "").toLowerCase().includes(selectedSport.toLowerCase());
+    return matchDiff && matchSport;
+  });
 
   return (
     <div className="space-y-6 pb-10 animate-in fade-in duration-500">
@@ -143,21 +146,40 @@ export default function StudentJoinIn() {
         <p className="text-sm text-slate-500">Find open sessions and play with others!</p>
       </div>
 
-      {/* Skill Level Filter Bar */}
-      <div className="flex space-x-2 overflow-x-auto pb-1 custom-scrollbar">
-        {["All", "Beginner", "Intermediate", "Advanced"].map((level) => (
-          <button
-            key={level}
-            onClick={() => setSelectedDifficulty(level)}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
-              selectedDifficulty === level
-                ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
-                : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100"
-            }`}
-          >
-            {level}
-          </button>
-        ))}
+      {/* Sport Category Filter Bar */}
+      <div className="space-y-3">
+        <div className="flex space-x-2 overflow-x-auto pb-1 custom-scrollbar">
+          {sportsList.map((sport) => (
+            <button
+              key={sport}
+              onClick={() => setSelectedSport(sport)}
+              className={`px-4 py-2 rounded-xl text-xs font-black uppercase tracking-wider transition-all whitespace-nowrap ${
+                selectedSport === sport
+                  ? "bg-brand-deep text-white shadow-md shadow-brand-deep/20"
+                  : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100 font-bold"
+              }`}
+            >
+              {sport}
+            </button>
+          ))}
+        </div>
+
+        {/* Skill Level Filter Bar */}
+        <div className="flex space-x-2 overflow-x-auto pb-1 custom-scrollbar">
+          {["All", "Beginner", "Intermediate", "Advanced"].map((level) => (
+            <button
+              key={level}
+              onClick={() => setSelectedDifficulty(level)}
+              className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+                selectedDifficulty === level
+                  ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
+                  : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100"
+              }`}
+            >
+              {level}
+            </button>
+          ))}
+        </div>
       </div>
 
       {loading ? (
