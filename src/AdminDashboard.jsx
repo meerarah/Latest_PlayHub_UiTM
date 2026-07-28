@@ -228,8 +228,11 @@ export default function AdminDashboard() {
       } else if (activeTab === "courts") {
         const courtsData = await api.getCourts();
         setCourts(courtsData);
-      } else if (activeTab === "bookings") {
-        const data = await api.getEvents({ type: 'full_court,shared_session' });
+      } else if (activeTab === "full_bookings") {
+        const data = await api.getEvents({ type: 'full_court' });
+        setBookings(groupAdminBookings(data));
+      } else if (activeTab === "shared_sessions") {
+        const data = await api.getEvents({ type: 'shared_session' });
         setBookings(groupAdminBookings(data));
       }
     } catch (error) {
@@ -260,8 +263,8 @@ export default function AdminDashboard() {
 
   const resetForm = () => {
     setFormData({
-      sportName: "", venue: "", date: "", time: "", maxPlayers: "", difficultyLevel: "Beginner",
-      courtName: "", courtSport: "Futsal", courtCapacity: "", courtImage: ""
+      sportName: "", venue: "", date: "", time: "", slot: "17", maxPlayers: "10", difficultyLevel: "Beginner", status: "approved",
+      courtName: "", courtSport: "Futsal", courtCapacity: "4", courtImage: ""
     });
     setEditingItem(null);
     setShowModal(false);
@@ -270,13 +273,40 @@ export default function AdminDashboard() {
   const handleEditCourt = (c) => {
     setEditingItem(c);
     setFormData({
-      sportName: "", venue: "", date: "", time: "", maxPlayers: "", difficultyLevel: "Beginner",
+      sportName: "", venue: "", date: "", time: "", slot: "17", maxPlayers: "10", difficultyLevel: "Beginner", status: "approved",
       courtName: c.name || "",
       courtSport: c.sport || "Futsal",
       courtCapacity: c.capacity || "",
       courtImage: c.image || ""
     });
     setShowModal(true);
+  };
+
+  const handleEditBooking = (booking) => {
+    setEditingItem(booking);
+    setFormData({
+      sportName: booking.sportname || "",
+      venue: booking.venue || "",
+      date: booking.date || "",
+      time: booking.time || "",
+      slot: booking.slot ? String(booking.slot) : "17",
+      maxPlayers: booking.maxplayers ? String(booking.maxplayers) : "10",
+      difficultyLevel: booking.difficultylevel || "Beginner",
+      status: booking.status || "approved",
+      courtName: "", courtSport: "Futsal", courtCapacity: "4", courtImage: ""
+    });
+    setShowModal(true);
+  };
+
+  const handleDeleteBooking = async (booking) => {
+    if (!confirm("Are you sure you want to delete this booking/session?")) return;
+    try {
+      const ids = booking.ids || [booking.id];
+      await Promise.all(ids.map(id => api.deleteEvent(id)));
+      fetchDashboardData();
+    } catch (e) {
+      alert("Failed to delete booking");
+    }
   };
 
   const fetchParticipants = async (event) => {
@@ -286,7 +316,6 @@ export default function AdminDashboard() {
     try {
       const data = await api.getEventParticipants(event.id);
       
-      // Enriched with user names (for UI compatibility)
       const enriched = data.map(r => ({
         ...r,
         user: {
@@ -308,8 +337,6 @@ export default function AdminDashboard() {
     setUpdatingParticipant(regId);
     try {
       await api.updateParticipantStatus(regId, 'completed', studentId);
-      
-      // Refresh list
       fetchParticipants(selectedEventParticipants);
     } catch (e) {
       alert("Update failed");
@@ -352,19 +379,48 @@ export default function AdminDashboard() {
           venue: formData.venue,
           date: formData.date,
           time: formData.time,
-          maxplayers: parseInt(formData.maxPlayers),
+          maxplayers: parseInt(formData.maxPlayers) || 10,
           difficultylevel: formData.difficultyLevel,
           adminid: user.uid,
           type: 'event',
-          status: 'confirmed'
+          status: formData.status || 'confirmed'
         };
-        await api.createEvent(payload);
-        alert("Event created successfully!");
+        if (editingItem) {
+          await api.updateEvent(editingItem.id, payload);
+          alert("Event updated successfully!");
+        } else {
+          await api.createEvent(payload);
+          alert("Event created successfully!");
+        }
+      } else if (activeTab === "full_bookings" || activeTab === "shared_sessions") {
+        const isShared = activeTab === "shared_sessions";
+        const type = isShared ? "shared_session" : "full_court";
+        const payload = {
+          sportname: formData.sportName || "Court Booking",
+          venue: formData.venue || "Pusat Sukan",
+          date: formData.date,
+          slot: parseInt(formData.slot) || 17,
+          type: type,
+          maxplayers: parseInt(formData.maxPlayers) || (isShared ? 10 : 4),
+          currentPlayers: 1,
+          difficultylevel: formData.difficultyLevel || "Beginner",
+          status: formData.status || "approved",
+          adminid: user.uid
+        };
+
+        if (editingItem) {
+          const ids = editingItem.ids || [editingItem.id];
+          await Promise.all(ids.map(id => api.updateEvent(id, payload)));
+          alert("Booking updated successfully!");
+        } else {
+          await api.createEvent(payload);
+          alert("Booking created successfully!");
+        }
       } else if (activeTab === "courts") {
         const payload = {
           name: formData.courtName,
           sport: formData.courtSport,
-          capacity: parseInt(formData.courtCapacity),
+          capacity: parseInt(formData.courtCapacity) || 4,
           image: formData.courtImage.trim() || "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&q=80",
           arena: 'Pusat Sukan'
         };
@@ -422,11 +478,31 @@ export default function AdminDashboard() {
            </p>
         </div>
         <div className="flex items-center space-x-3 w-full md:w-auto">
-          <button onClick={handleSeed} className="flex-1 md:flex-none px-6 py-3.5 bg-white/60 hover:bg-white text-admin-text rounded-[20px] text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm">Seed Facilities</button>
           {activeTab === "courts" && (
+            <>
+              <button onClick={handleSeed} className="flex-1 md:flex-none px-6 py-3.5 bg-white/60 hover:bg-white text-admin-text rounded-[20px] text-xs font-black uppercase tracking-wider transition-all active:scale-[0.98] shadow-sm">Seed Facilities</button>
+              <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 md:flex-none bg-admin-accent hover:bg-admin-accent/90 text-white font-black text-xs uppercase tracking-widest py-3.5 px-6 rounded-[20px] flex items-center justify-center space-x-2 shadow-lg shadow-admin-accent/20 transition-all active:scale-[0.98]">
+                 <Plus className="w-4 h-4" />
+                 <span>Add Facility</span>
+              </button>
+            </>
+          )}
+          {activeTab === "full_bookings" && (
             <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 md:flex-none bg-admin-accent hover:bg-admin-accent/90 text-white font-black text-xs uppercase tracking-widest py-3.5 px-6 rounded-[20px] flex items-center justify-center space-x-2 shadow-lg shadow-admin-accent/20 transition-all active:scale-[0.98]">
                <Plus className="w-4 h-4" />
-               <span>Add Facility</span>
+               <span>Add Court Booking</span>
+            </button>
+          )}
+          {activeTab === "shared_sessions" && (
+            <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 md:flex-none bg-admin-accent hover:bg-admin-accent/90 text-white font-black text-xs uppercase tracking-widest py-3.5 px-6 rounded-[20px] flex items-center justify-center space-x-2 shadow-lg shadow-admin-accent/20 transition-all active:scale-[0.98]">
+               <Plus className="w-4 h-4" />
+               <span>Create Join-In Session</span>
+            </button>
+          )}
+          {activeTab === "events" && (
+            <button onClick={() => { resetForm(); setShowModal(true); }} className="flex-1 md:flex-none bg-admin-accent hover:bg-admin-accent/90 text-white font-black text-xs uppercase tracking-widest py-3.5 px-6 rounded-[20px] flex items-center justify-center space-x-2 shadow-lg shadow-admin-accent/20 transition-all active:scale-[0.98]">
+               <Plus className="w-4 h-4" />
+               <span>Create Tournament</span>
             </button>
           )}
         </div>
@@ -436,7 +512,9 @@ export default function AdminDashboard() {
       <div className="flex space-x-2 bg-admin-card p-2 rounded-[28px] border border-white/40 shadow-inner w-fit overflow-x-auto">
         {[
           { id: "courts", label: "Facilities", icon: MapPin },
-          { id: "bookings", label: "Court Bookings", icon: ClipboardList },
+          { id: "full_bookings", label: "Court Bookings (Full)", icon: ClipboardList },
+          { id: "shared_sessions", label: "Join-in Sessions (Shared)", icon: Users },
+          { id: "events", label: "Tournaments", icon: Compass }
         ].map(t => (
           <button
             key={t.id}
@@ -560,13 +638,15 @@ export default function AdminDashboard() {
           </div>
         )}
 
-        {activeTab === "bookings" && (
+        {(activeTab === "full_bookings" || activeTab === "shared_sessions") && (
           <div>
             {loading ? (
               <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-admin-accent animate-spin" /></div>
             ) : bookings.length === 0 ? (
               <div className="text-center py-16 bg-admin-card rounded-[32px] border border-white/40">
-                 <p className="text-admin-text/40 font-black uppercase tracking-wider text-sm">No Court Bookings Found</p>
+                 <p className="text-admin-text/40 font-black uppercase tracking-wider text-sm">
+                   No {activeTab === "full_bookings" ? "Full Court Bookings" : "Join-in Sessions"} Found
+                 </p>
               </div>
             ) : (
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -580,17 +660,34 @@ export default function AdminDashboard() {
                           </div>
                           <div>
                             <h4 className="font-black text-admin-text leading-tight">{b.studentName || "Student"}</h4>
-                            <p className="text-[9px] text-admin-text/40 font-bold uppercase tracking-wider">ID: {b.studentid?.slice(0, 8)}...</p>
+                            <p className="text-[9px] text-admin-text/40 font-bold uppercase tracking-wider">ID: {b.studentid ? b.studentid.slice(0, 8) : "ADMIN"}...</p>
                           </div>
                         </div>
-                        <span className={cn(
-                          "px-3 py-1 rounded-xl text-[9px] font-black uppercase shadow-sm border",
-                          b.status === 'pending' ? "bg-amber-50 text-amber-600 border-amber-200" : 
-                          b.status === 'active' ? "bg-emerald-50 text-emerald-600 border-emerald-200" : 
-                          "bg-red-50 text-red-500 border-red-200"
-                        )}>
-                          {b.status || 'active'}
-                        </span>
+                        
+                        <div className="flex items-center space-x-2">
+                          <span className={cn(
+                            "px-3 py-1 rounded-xl text-[9px] font-black uppercase shadow-sm border",
+                            b.status === 'pending' ? "bg-amber-50 text-amber-600 border-amber-200" : 
+                            (b.status === 'approved' || b.status === 'active' || b.status === 'confirmed') ? "bg-emerald-50 text-emerald-600 border-emerald-200" : 
+                            "bg-red-50 text-red-500 border-red-200"
+                          )}>
+                            {b.status || 'approved'}
+                          </span>
+                          <button 
+                            onClick={() => handleEditBooking(b)}
+                            className="p-2 bg-slate-100 hover:bg-slate-200 text-admin-text rounded-xl transition-all shadow-sm cursor-pointer"
+                            title="Edit Booking"
+                          >
+                            <Edit2 className="w-3.5 h-3.5" />
+                          </button>
+                          <button 
+                            onClick={() => handleDeleteBooking(b)}
+                            className="p-2 bg-red-50 hover:bg-red-100 text-red-500 rounded-xl transition-all shadow-sm cursor-pointer"
+                            title="Delete Booking"
+                          >
+                            <Trash2 className="w-3.5 h-3.5" />
+                          </button>
+                        </div>
                       </div>
                       
                       <div className="space-y-2 my-5 font-bold text-xs uppercase tracking-wider text-admin-text/60">
@@ -601,8 +698,18 @@ export default function AdminDashboard() {
                         <div className="flex items-center pl-6">
                           Slot Booked: {b.date} @ {b.slots ? `${b.slots[0]}:00 - ${b.slots[b.slots.length - 1] + 1}:00` : `${b.slot}:00`}
                         </div>
-                        <div className="pl-6 text-[9px] font-black text-admin-accent uppercase tracking-widest">
-                          {b.type === 'full_court' ? "Full Booking" : "Shared Session"}
+                        {b.type === 'shared_session' && (
+                          <div className="flex items-center space-x-2 pl-6 pt-1">
+                            <span className="px-2.5 py-0.5 bg-admin-accent/10 text-admin-accent border border-admin-accent/15 rounded-md text-[9px] font-black uppercase">
+                              Level: {b.difficultylevel || 'Beginner'}
+                            </span>
+                            <span className="text-[10px] font-bold text-slate-500">
+                              Capacity: {b.currentPlayers || 1} / {b.maxplayers || 10} Slots
+                            </span>
+                          </div>
+                        )}
+                        <div className="pl-6 text-[9px] font-black text-admin-accent uppercase tracking-widest pt-1">
+                          {b.type === 'full_court' ? "Full Booking (Private)" : "Shared Session (Join-In)"}
                         </div>
                       </div>
                     </div>
@@ -622,24 +729,35 @@ export default function AdminDashboard() {
                         <span className="text-[10px] text-admin-text/30 font-bold italic">No attachment</span>
                       )}
                       
-                      {b.status === 'pending' && (
-                        <div className="flex space-x-2">
+                      <div className="flex space-x-2">
+                        {b.type === 'shared_session' && (
                           <button 
-                            onClick={() => updateBookingStatus(b, 'active')} 
-                            className="bg-emerald-500 hover:bg-emerald-600 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer" 
-                            title="Approve"
+                            onClick={() => fetchParticipants(b)} 
+                            className="bg-admin-accent/10 hover:bg-admin-accent/20 text-admin-accent px-3 py-2 rounded-xl text-[10px] font-black uppercase tracking-wider flex items-center transition-all cursor-pointer"
+                            title="Manage Players"
                           >
-                            <CheckCircle2 className="w-4 h-4" />
+                            <Users className="w-3.5 h-3.5 mr-1" /> Roster
                           </button>
-                          <button 
-                            onClick={() => updateBookingStatus(b, 'rejected')} 
-                            className="bg-red-505 hover:bg-red-600 bg-red-500 text-white p-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-95 cursor-pointer" 
-                            title="Reject"
-                          >
-                            <X className="w-4 h-4" />
-                          </button>
-                        </div>
-                      )}
+                        )}
+                        {b.status === 'pending' && (
+                          <>
+                            <button 
+                              onClick={() => updateBookingStatus(b, 'approved')} 
+                              className="bg-emerald-500 hover:bg-emerald-600 text-white p-2.5 rounded-xl shadow-lg shadow-emerald-500/20 transition-all active:scale-95 cursor-pointer" 
+                              title="Approve"
+                            >
+                              <CheckCircle2 className="w-4 h-4" />
+                            </button>
+                            <button 
+                              onClick={() => updateBookingStatus(b, 'rejected')} 
+                              className="bg-red-500 hover:bg-red-600 text-white p-2.5 rounded-xl shadow-lg shadow-red-500/20 transition-all active:scale-95 cursor-pointer" 
+                              title="Reject"
+                            >
+                              <X className="w-4 h-4" />
+                            </button>
+                          </>
+                        )}
+                      </div>
                     </div>
                   </div>
                 ))}
@@ -649,19 +767,69 @@ export default function AdminDashboard() {
         )}
       </div>
 
-      {/* Unified Create Modal */}
+      {/* Unified Create/Edit Modal */}
       {showModal && (
         <div className="fixed inset-0 bg-admin-text/60 backdrop-blur-xl z-50 flex items-center justify-center p-4">
            <div className="bg-admin-panel border border-white/60 rounded-[40px] w-full max-w-lg shadow-2xl p-8 animate-in zoom-in-95 duration-200">
               <div className="flex justify-between items-center mb-8">
                  <h3 className="font-black text-2xl text-admin-text uppercase tracking-tight">
-                   {editingItem ? "Edit" : "Add"} {activeTab === "events" ? "New Event" : "Facility Court"}
+                   {editingItem ? "Edit" : "Add"} {
+                     activeTab === "events" ? "Tournament" :
+                     activeTab === "full_bookings" ? "Court Booking" :
+                     activeTab === "shared_sessions" ? "Join-in Session" : "Facility Court"
+                   }
                  </h3>
                  <button onClick={resetForm} className="text-admin-text/50 hover:bg-admin-card hover:text-admin-text p-2.5 rounded-2xl transition-colors"><X className="w-6 h-6" /></button>
               </div>
               
               <form onSubmit={handleSubmit} className="space-y-4">
-                {activeTab === "events" ? (
+                {(activeTab === "full_bookings" || activeTab === "shared_sessions") ? (
+                  <>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Sport / Event Title</label>
+                      <input required type="text" placeholder="e.g. Futsal Booking" value={formData.sportName} onChange={e => setFormData({...formData, sportName: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-admin-accent text-admin-text font-bold" />
+                    </div>
+                    <div className="space-y-1">
+                      <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Venue / Court Name</label>
+                      <input required type="text" placeholder="e.g. Gelanggang Futsal A" value={formData.venue} onChange={e => setFormData({...formData, venue: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-admin-accent text-admin-text font-bold" />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Date</label>
+                        <input required type="date" value={formData.date} onChange={e => setFormData({...formData, date: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-admin-accent text-admin-text font-bold" />
+                      </div>
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Time Slot (Hour 8-22)</label>
+                        <input required type="number" min="8" max="22" placeholder="17" value={formData.slot} onChange={e => setFormData({...formData, slot: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-admin-accent text-admin-text font-bold" />
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="space-y-1">
+                        <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Status</label>
+                        <select value={formData.status} onChange={e => setFormData({...formData, status: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none text-admin-text font-bold">
+                           <option value="approved">Approved</option>
+                           <option value="pending">Pending</option>
+                           <option value="rejected">Rejected</option>
+                        </select>
+                      </div>
+                      {activeTab === "shared_sessions" ? (
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Difficulty Level</label>
+                          <select value={formData.difficultyLevel} onChange={e => setFormData({...formData, difficultyLevel: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none text-admin-text font-bold">
+                             <option value="Beginner">Beginner</option>
+                             <option value="Intermediate">Intermediate</option>
+                             <option value="Advanced">Advanced</option>
+                          </select>
+                        </div>
+                      ) : (
+                        <div className="space-y-1">
+                          <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Max Capacity</label>
+                          <input type="number" placeholder="4" value={formData.maxPlayers} onChange={e => setFormData({...formData, maxPlayers: e.target.value})} className="w-full bg-admin-card/50 border border-white/40 p-4 rounded-2xl outline-none focus:ring-2 focus:ring-admin-accent text-admin-text font-bold" />
+                        </div>
+                      )}
+                    </div>
+                  </>
+                ) : activeTab === "events" ? (
                   <>
                     <div className="space-y-1">
                       <label className="text-[10px] font-black text-admin-text/50 uppercase tracking-widest pl-1">Event Title</label>

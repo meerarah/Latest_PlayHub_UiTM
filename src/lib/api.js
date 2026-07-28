@@ -283,6 +283,15 @@ export const api = {
     if (!res.ok) throw new Error('Failed to update booking status');
     return res.json();
   },
+  updateEvent: async (id, eventData) => {
+    const res = await fetch(`${API_BASE_URL}/events/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(eventData)
+    });
+    if (!res.ok) throw new Error('Failed to update event details');
+    return res.json();
+  },
   deleteEvent: async (id) => {
     const res = await fetch(`${API_BASE_URL}/events/${id}`, {
       method: 'DELETE'
