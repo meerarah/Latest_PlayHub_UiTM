@@ -209,13 +209,17 @@ export default function AdminDashboard() {
   const fetchDashboardData = async () => {
     setLoading(true);
     try {
-      // 1. Fetch Stats from MySQL
-      const counts = await api.getDashboardStats();
-      setStats({
-        students: counts.users,
-        events: counts.events,
-        feedbacks: counts.feedbacks
-      });
+      // 1. Fetch Stats from MySQL (safely isolated)
+      try {
+        const counts = await api.getDashboardStats();
+        setStats({
+          students: counts.users || 0,
+          events: counts.events || 0,
+          feedbacks: counts.feedbacks || 0
+        });
+      } catch (statsErr) {
+        console.error("Error fetching stats:", statsErr);
+      }
 
       // 2. Fetch Tab Specific Data from MySQL
       if (activeTab === "events") {
@@ -229,7 +233,7 @@ export default function AdminDashboard() {
         setBookings(groupAdminBookings(data));
       }
     } catch (error) {
-      console.error("Error fetching data:", error);
+      console.error("Error fetching tab data:", error);
     } finally {
       setLoading(false);
     }

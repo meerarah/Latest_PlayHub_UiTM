@@ -6,18 +6,18 @@ const router = express.Router();
 // GET dashboard stats for Admin
 router.get('/stats', async (req, res) => {
   try {
-    const [[usersCount]] = await pool.query('SELECT COUNT(*) AS count FROM users');
-    const [[eventsCount]] = await pool.query("SELECT COUNT(*) AS count FROM Sport_event WHERE type = 'event'");
-    const [[feedbacksCount]] = await pool.query('SELECT COUNT(*) AS count FROM feedbacks');
+    const [uRows] = await pool.query('SELECT COUNT(*) AS count FROM users');
+    const [eRows] = await pool.query("SELECT COUNT(*) AS count FROM Sport_event WHERE type = 'event'");
+    const [fRows] = await pool.query('SELECT COUNT(*) AS count FROM feedbacks');
     
     res.json({
-      users: usersCount.count,
-      events: eventsCount.count,
-      feedbacks: feedbacksCount.count
+      users: (uRows && uRows[0]) ? uRows[0].count : 0,
+      events: (eRows && eRows[0]) ? eRows[0].count : 0,
+      feedbacks: (fRows && fRows[0]) ? fRows[0].count : 0
     });
   } catch (error) {
     console.error('Error fetching dashboard stats:', error);
-    res.status(500).json({ error: 'Database error fetching dashboard stats' });
+    res.status(500).json({ error: error.message || 'Database error fetching dashboard stats' });
   }
 });
 
