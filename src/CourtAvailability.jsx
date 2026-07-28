@@ -8,6 +8,17 @@ import { cn } from "./lib/utils";
 import { createNotification } from "./lib/notificationUtils";
 import { api } from "./lib/api";
 
+const formatSlotToTime = (slotHour) => {
+  if (slotHour === null || slotHour === undefined) return 'TBA';
+  const h = parseInt(slotHour, 10);
+  if (isNaN(h)) return 'TBA';
+  const startPeriod = h >= 12 ? 'PM' : 'AM';
+  const startH = h > 12 ? h - 12 : h === 0 ? 12 : h;
+  const endH = (h + 1) > 12 ? (h + 1) - 12 : (h + 1) === 0 ? 12 : (h + 1);
+  const endPeriod = (h + 1) >= 12 ? 'PM' : 'AM';
+  return `${String(startH).padStart(2, '0')}:00 ${startPeriod} - ${String(endH).padStart(2, '0')}:00 ${endPeriod}`;
+};
+
 // Define the standard operational hours (24h format) available for court bookings at Pusat Sukan
 const AVAILABLE_SLOTS = [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21];
 
@@ -232,6 +243,7 @@ export default function CourtAvailability() {
               sportname: selectedCourt.sport,
               venue: selectedCourt.name,
               date: selectedDate,
+              time: formatSlotToTime(s),
               slot: s,
               type: bookingMode,
               maxplayers: bookingMode === "full_court" ? selectedCourt.capacity : (parseInt(formData.maxPlayers) || 10),

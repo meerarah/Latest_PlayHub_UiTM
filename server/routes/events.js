@@ -68,6 +68,18 @@ router.get('/', async (req, res) => {
   }
 });
 
+const formatSlotToTime = (slotHour, providedTime) => {
+  if (providedTime && providedTime !== 'TBA') return providedTime;
+  if (slotHour === null || slotHour === undefined) return 'TBA';
+  const h = parseInt(slotHour, 10);
+  if (isNaN(h)) return 'TBA';
+  const startPeriod = h >= 12 ? 'PM' : 'AM';
+  const startH = h > 12 ? h - 12 : h === 0 ? 12 : h;
+  const endH = (h + 1) > 12 ? (h + 1) - 12 : (h + 1) === 0 ? 12 : (h + 1);
+  const endPeriod = (h + 1) >= 12 ? 'PM' : 'AM';
+  return `${String(startH).padStart(2, '0')}:00 ${startPeriod} - ${String(endH).padStart(2, '0')}:00 ${endPeriod}`;
+};
+
 // POST create a new event or court booking
 router.post('/', async (req, res) => {
   const { 
@@ -82,6 +94,7 @@ router.post('/', async (req, res) => {
 
   // Save creator ID (either admin or student)
   const creatorID = adminid || studentid || null;
+  const computedTime = formatSlotToTime(slot, time);
 
   try {
     if (creatorID) {
@@ -108,7 +121,7 @@ router.post('/', async (req, res) => {
         sportname,
         venue,
         date,
-        time || 'TBA',
+        computedTime,
         maxplayers || 10,
         currentPlayers || 0,
         difficultylevel || 'Beginner',
