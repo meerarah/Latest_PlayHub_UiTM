@@ -147,6 +147,9 @@ router.put('/:id/status', async (req, res) => {
   } catch (error) {
     console.error('Error updating event status:', error);
     res.status(500).json({ error: 'Database error updating event status' });
+  }
+});
+
 // PUT update full event details (admin edit)
 router.put('/:id', async (req, res) => {
   const { id } = req.params;
