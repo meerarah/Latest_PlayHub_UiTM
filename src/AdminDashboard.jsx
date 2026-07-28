@@ -513,8 +513,7 @@ export default function AdminDashboard() {
         {[
           { id: "courts", label: "Facilities", icon: MapPin },
           { id: "full_bookings", label: "Court Bookings (Full)", icon: ClipboardList },
-          { id: "shared_sessions", label: "Join-in Sessions (Shared)", icon: Users },
-          { id: "events", label: "Tournaments", icon: Compass }
+          { id: "shared_sessions", label: "Join-in Sessions (Shared)", icon: Users }
         ].map(t => (
           <button
             key={t.id}
