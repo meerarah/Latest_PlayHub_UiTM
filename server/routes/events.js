@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/stats', async (req, res) => {
   try {
     const [[usersCount]] = await pool.query('SELECT COUNT(*) AS count FROM users');
-    const [[eventsCount]] = await pool.query('SELECT COUNT(*) AS count FROM Sport_event WHERE type = "event"');
+    const [[eventsCount]] = await pool.query("SELECT COUNT(*) AS count FROM Sport_event WHERE type = 'event'");
     const [[feedbacksCount]] = await pool.query('SELECT COUNT(*) AS count FROM feedbacks');
     
     res.json({
