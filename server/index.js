@@ -150,8 +150,8 @@ app.listen(PORT, async () => {
       ];
       for (const t of tournaments) {
         await pool.query(
-          "INSERT INTO Tournaments (name, sport, date, time, venue, maxTeams, description, status) VALUES (?, ?, ?, ?, ?, ?, ?, 'active')",
-          [t.name, t.sport, t.date, t.time, t.venue, t.maxTeams, t.description]
+          "INSERT INTO Tournaments (name, sport, date, time, venue, maxTeams, description, status) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+          [t.name, t.sport, t.date, t.time, t.venue, t.maxTeams, t.description, "active"]
         );
       }
       console.log('✅ Tournaments seeded.');
