@@ -172,6 +172,18 @@ export default function CourtAvailability() {
     try {
       let proofUrl = ""; // Placeholder for booking receipt/proof if required
 
+      // Ensure user profile exists in MySQL to satisfy Foreign Key constraints
+      if (user?.uid) {
+        await api.syncUser({
+          id: user.uid,
+          fullname: formData.fullName || user.displayName || "Student",
+          email: user.email || `${user.uid}@student.uitm.edu.my`,
+          role: "student",
+          matrixId: formData.matrixId,
+          phoneNumber: formData.phone
+        }).catch(err => console.warn("[CourtAvailability] User pre-sync warning:", err));
+      }
+
       if (bookingMode === "join") {
         // Find existing open session event in Firestore
         const event = events.find(e => e.courtId === selectedCourt.id && e.slot === selectedSlot);

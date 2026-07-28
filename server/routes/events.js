@@ -72,7 +72,8 @@ router.get('/', async (req, res) => {
 router.post('/', async (req, res) => {
   const { 
     sportname, venue, date, time, maxplayers, currentPlayers, 
-    difficultylevel, adminid, studentid, type, proofUrl, slot, phoneNumber, courtid, status 
+    difficultylevel, adminid, studentid, type, proofUrl, slot, phoneNumber, courtid, status,
+    studentName, matrixId
   } = req.body;
 
   if (!sportname || !venue || !date || !type) {
@@ -83,6 +84,22 @@ router.post('/', async (req, res) => {
   const creatorID = adminid || studentid || null;
 
   try {
+    if (creatorID) {
+      // Auto-upsert user record to prevent foreign key constraint failure
+      await pool.query(
+        `INSERT INTO users (id, fullname, email, role) VALUES (?, ?, ?, 'student')
+         ON DUPLICATE KEY UPDATE fullname = VALUES(fullname)`,
+        [creatorID, studentName || 'Student', `${creatorID}@student.uitm.edu.my`]
+      );
+      if (matrixId) {
+        await pool.query(
+          `INSERT INTO students (userID, matrixID, phoneNumber) VALUES (?, ?, ?)
+           ON DUPLICATE KEY UPDATE matrixID = VALUES(matrixID), phoneNumber = VALUES(phoneNumber)`,
+          [creatorID, matrixId, phoneNumber || null]
+        );
+      }
+    }
+
     const [result] = await pool.query(
       `INSERT INTO Sport_event 
        (sportname, venue, date, time, maxplayers, currentPlayers, difficultylevel, createdByID, type, proofUrl, slot, phoneNumber, courtID, status) 
@@ -101,7 +118,7 @@ router.post('/', async (req, res) => {
         slot || null,
         phoneNumber || null,
         courtid || null,
-        status || 'pending'
+        status || 'approved'
       ]
     );
 
@@ -111,11 +128,11 @@ router.post('/', async (req, res) => {
       venue,
       date,
       type,
-      status: status || 'pending'
+      status: status || 'approved'
     });
   } catch (error) {
     console.error('Error creating sport event/booking:', error);
-    res.status(500).json({ error: 'Database error creating event/booking' });
+    res.status(500).json({ error: error.message || 'Database error creating event/booking' });
   }
 });
 
@@ -182,6 +199,15 @@ router.post('/:id/join', async (req, res) => {
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
+
+    // Auto-upsert user record to prevent foreign key constraint failure
+    if (studentId) {
+      await connection.query(
+        `INSERT INTO users (id, fullname, email, role) VALUES (?, 'Student User', ?, 'student')
+         ON DUPLICATE KEY UPDATE id = id`,
+        [studentId, `${studentId}@student.uitm.edu.my`]
+      );
+    }
 
     // Check if registration already exists
     const [existing] = await connection.query(
