@@ -43,6 +43,7 @@ import { useAuth } from "./context/AuthContext";
 import { cn } from "./lib/utils";
 import { api } from "./lib/api";
 import { initializeSystem } from "./lib/adminUtils";
+import { createNotification } from "./lib/notificationUtils";
 
 export default function AdminDashboard() {
   const { user } = useAuth();
@@ -337,6 +338,14 @@ export default function AdminDashboard() {
     setUpdatingParticipant(regId);
     try {
       await api.updateParticipantStatus(regId, 'completed', studentId);
+      if (studentId) {
+        await createNotification(
+          studentId,
+          "Match Completed & Certificate Issued! 🏆",
+          `Congratulations! Your tournament match for ${selectedEventParticipants?.sportname || 'Tournament'} is complete. Your E-Certificate is ready!`,
+          "event"
+        );
+      }
       fetchParticipants(selectedEventParticipants);
     } catch (e) {
       alert("Update failed");
@@ -350,6 +359,15 @@ export default function AdminDashboard() {
     try {
       const ids = booking.ids || [booking.id];
       await Promise.all(ids.map(id => api.updateBookingStatus(id, status)));
+      const recipientId = booking.studentid || booking.studentId;
+      if (recipientId) {
+        await createNotification(
+          recipientId,
+          `Booking ${status === 'approved' ? 'Approved! ✅' : 'Rejected ❌'}`,
+          `Your booking for ${booking.venue || 'court'} on ${booking.date} has been ${status}.`,
+          "booking"
+        );
+      }
       fetchDashboardData();
     } catch (error) {
       alert("Failed to update status");
@@ -361,6 +379,15 @@ export default function AdminDashboard() {
      setUpdatingParticipant(regId);
      try {
        await api.updateParticipantStatus(regId, status);
+       const targetP = participantsList.find(p => p.id === regId);
+       if (targetP && targetP.studentID) {
+         await createNotification(
+           targetP.studentID,
+           `Session Registration ${status === 'joined' ? 'Approved! ✅' : 'Rejected ❌'}`,
+           `Your registration status for ${selectedEventParticipants?.venue || 'session'} has been updated to ${status}.`,
+           "event"
+         );
+       }
        fetchParticipants(selectedEventParticipants);
      } catch(e) {
        alert("Failed to update");

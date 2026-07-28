@@ -37,9 +37,16 @@ router.post('/', async (req, res) => {
   }
 
   try {
+    // Auto-upsert user record to satisfy foreign key constraint
+    await pool.query(
+      `INSERT INTO users (id, fullname, email, role) VALUES (?, 'Student', CONCAT(?, '@student.uitm.edu.my'), 'student')
+       ON DUPLICATE KEY UPDATE id = VALUES(id)`,
+      [userId, userId]
+    );
+
     const [result] = await pool.query(
-      'INSERT INTO notifications (userID, title, message, type, status) VALUES (?, ?, ?, ?, "unread")',
-      [userId, title, message || '', type || 'info']
+      'INSERT INTO notifications (userID, title, message, type, status) VALUES (?, ?, ?, ?, ?)',
+      [userId, title, message || '', type || 'info', 'unread']
     );
     res.status(201).json({
       id: result.insertId,
@@ -51,7 +58,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating notification:', error);
-    res.status(500).json({ error: 'Database error creating notification' });
+    res.status(500).json({ error: error.message || 'Database error creating notification' });
   }
 });
 
@@ -59,11 +66,11 @@ router.post('/', async (req, res) => {
 router.put('/:id/read', async (req, res) => {
   const { id } = req.params;
   try {
-    await pool.query('UPDATE notifications SET status = "read" WHERE notificationID = ?', [id]);
+    await pool.query('UPDATE notifications SET status = ? WHERE notificationID = ?', ['read', id]);
     res.json({ message: 'Notification marked as read successfully' });
   } catch (error) {
     console.error('Error marking notification as read:', error);
-    res.status(500).json({ error: 'Database error updating notification' });
+    res.status(500).json({ error: error.message || 'Database error updating notification' });
   }
 });
 
@@ -75,11 +82,11 @@ router.put('/read-all', async (req, res) => {
   }
 
   try {
-    await pool.query('UPDATE notifications SET status = "read" WHERE userID = ? AND status = "unread"', [userId]);
+    await pool.query('UPDATE notifications SET status = ? WHERE userID = ? AND status = ?', ['read', userId, 'unread']);
     res.json({ message: 'All notifications marked as read successfully' });
   } catch (error) {
     console.error('Error marking all notifications as read:', error);
-    res.status(500).json({ error: 'Database error updating notifications' });
+    res.status(500).json({ error: error.message || 'Database error updating notifications' });
   }
 });
 
