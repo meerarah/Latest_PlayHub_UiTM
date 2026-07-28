@@ -38,8 +38,7 @@ export default function StudentJoinIn() {
       
       const available = data
         .filter(s => s.status !== 'rejected')
-        .filter(s => s.date > today || (s.date === today && s.slot > currentHour))
-        .filter(s => (s.currentPlayers || 1) < s.maxplayers)
+        .filter(s => s.date >= today)
         .sort((a, b) => a.date.localeCompare(b.date) || a.slot - b.slot);
 
       // Fetch user's existing registrations
@@ -218,22 +217,30 @@ export default function StudentJoinIn() {
                  </div>
               </div>
 
-              <button 
-                disabled={session.isJoined}
-                onClick={() => {
-                  setSelectedSession(session);
-                  setParticipants(1);
-                  setStudentId("");
-                }}
-                className={`w-full py-4 font-black rounded-2xl transition-all flex items-center justify-center space-x-2 ${
-                  session.isJoined
-                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
-                    : "bg-brand-deep hover:bg-brand-deep/90 text-white shadow-lg shadow-brand-deep/20 cursor-pointer"
-                }`}
-              >
-                <span>{session.isJoined ? "Joined" : "Join Session"}</span>
-                {!session.isJoined && <ChevronRight className="w-4 h-4" />}
-              </button>
+              {(() => {
+                const isFull = (session.currentPlayers || 1) >= session.maxplayers;
+                const isDisabled = session.isJoined || isFull;
+                return (
+                  <button 
+                    disabled={isDisabled}
+                    onClick={() => {
+                      setSelectedSession(session);
+                      setParticipants(1);
+                      setStudentId("");
+                    }}
+                    className={`w-full py-4 font-black rounded-2xl transition-all flex items-center justify-center space-x-2 ${
+                      session.isJoined
+                        ? "bg-emerald-50 text-emerald-600 border border-emerald-200 cursor-not-allowed font-bold"
+                        : isFull
+                        ? "bg-slate-100 text-slate-400 cursor-not-allowed font-bold"
+                        : "bg-brand-deep hover:bg-brand-deep/90 text-white shadow-lg shadow-brand-deep/20 cursor-pointer"
+                    }`}
+                  >
+                    <span>{session.isJoined ? "Already Joined" : isFull ? "Session Full" : "Join Session"}</span>
+                    {!isDisabled && <ChevronRight className="w-4 h-4" />}
+                  </button>
+                );
+              })()}
             </div>
           ))}
         </div>
