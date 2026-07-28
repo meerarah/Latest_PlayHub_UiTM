@@ -264,7 +264,7 @@ export default function AdminTournaments() {
       fetchPublishedTournaments();
     } catch (error) {
       console.error(error);
-      alert(`Failed to ${editingItem ? 'update' : 'create'} tournament.`);
+      alert(`Failed to ${editingItem ? 'update' : 'create'} tournament: ${error.message || 'Server error'}`);
     } finally {
       setProcessing(null);
     }

@@ -40,6 +40,22 @@ router.get('/:id', async (req, res) => {
   }
 });
 
+const normalizeDate = (dStr) => {
+  if (!dStr) return null;
+  const str = String(dStr).trim();
+  // If DD/MM/YYYY format
+  if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(str)) {
+    const [dd, mm, yyyy] = str.split('/');
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+  }
+  // If DD-MM-YYYY format
+  if (/^\d{1,2}-\d{1,2}-\d{4}$/.test(str)) {
+    const [dd, mm, yyyy] = str.split('-');
+    return `${yyyy}-${mm.padStart(2, '0')}-${dd.padStart(2, '0')}`;
+  }
+  return str;
+};
+
 // POST create a new tournament (handles request approval inside transaction)
 router.post('/', async (req, res) => {
   const { name, sport, date, time, venue, maxTeams, description, requestId } = req.body;
@@ -47,13 +63,15 @@ router.post('/', async (req, res) => {
     return res.status(400).json({ error: 'Missing required fields (name, sport, date)' });
   }
 
+  const normalizedDate = normalizeDate(date);
+
   const connection = await pool.getConnection();
   try {
     await connection.beginTransaction();
 
     const [result] = await connection.query(
       'INSERT INTO Tournaments (name, sport, date, time, venue, maxTeams, description, status, tournamentRequestID) VALUES (?, ?, ?, ?, ?, ?, ?, "active", ?)',
-      [name, sport, date, time || '09:00 AM', venue || 'TBA', maxTeams || 8, description || '', requestId || null]
+      [name, sport, normalizedDate, time || '09:00 AM', venue || 'TBA', maxTeams || 8, description || '', requestId || null]
     );
 
     if (requestId) {
@@ -68,7 +86,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     await connection.rollback();
     console.error('Error creating tournament:', error);
-    res.status(500).json({ error: 'Database error creating tournament' });
+    res.status(500).json({ error: error.message || 'Database error creating tournament' });
   } finally {
     connection.release();
   }
@@ -79,14 +97,15 @@ router.put('/:id', async (req, res) => {
   const { id } = req.params;
   const { name, sport, date, time, venue, maxTeams, description } = req.body;
   try {
+    const normalizedDate = normalizeDate(date);
     await pool.query(
       'UPDATE Tournaments SET name = ?, sport = ?, date = ?, time = ?, venue = ?, maxTeams = ?, description = ? WHERE tournamentID = ?',
-      [name, sport, date, time, venue, maxTeams, description, id]
+      [name, sport, normalizedDate, time, venue, maxTeams, description, id]
     );
     res.json({ message: 'Tournament updated successfully' });
   } catch (error) {
     console.error('Error updating tournament:', error);
-    res.status(500).json({ error: 'Database error updating tournament' });
+    res.status(500).json({ error: error.message || 'Database error updating tournament' });
   }
 });
 
