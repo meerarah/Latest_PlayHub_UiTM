@@ -11,6 +11,7 @@ const pool = (process.env.DATABASE_URL || process.env.MYSQL_URL)
       password: process.env.DB_PASSWORD || '',
       database: process.env.DB_NAME || 'playhub',
       port: process.env.DB_PORT ? parseInt(process.env.DB_PORT, 10) : 3306,
+      ssl: (process.env.DB_SSL === 'true' || process.env.DB_SSL === 'REQUIRED') ? { rejectUnauthorized: false } : undefined,
       waitForConnections: true,
       connectionLimit: 10,
       queueLimit: 0
