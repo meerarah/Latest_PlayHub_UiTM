@@ -98,7 +98,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(tournamentData)
     });
-    if (!res.ok) throw new Error('Failed to create tournament');
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to create tournament');
+    }
     return res.json();
   },
   updateTournament: async (id, tournamentData) => {
@@ -107,7 +110,10 @@ export const api = {
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify(tournamentData)
     });
-    if (!res.ok) throw new Error('Failed to update tournament');
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error || 'Failed to update tournament');
+    }
     return res.json();
   },
   deleteTournament: async (id) => {

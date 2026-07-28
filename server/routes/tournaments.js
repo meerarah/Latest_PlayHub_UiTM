@@ -70,13 +70,13 @@ router.post('/', async (req, res) => {
     await connection.beginTransaction();
 
     const [result] = await connection.query(
-      'INSERT INTO Tournaments (name, sport, date, time, venue, maxTeams, description, status, tournamentRequestID) VALUES (?, ?, ?, ?, ?, ?, ?, "active", ?)',
+      "INSERT INTO Tournaments (name, sport, date, time, venue, maxTeams, description, status, tournamentRequestID) VALUES (?, ?, ?, ?, ?, ?, ?, 'active', ?)",
       [name, sport, normalizedDate, time || '09:00 AM', venue || 'TBA', maxTeams || 8, description || '', requestId || null]
     );
 
     if (requestId) {
       await connection.query(
-        'UPDATE Tournament_Requests SET status = "approved" WHERE tournamentRequestID = ?',
+        "UPDATE Tournament_Requests SET status = 'approved' WHERE tournamentRequestID = ?",
         [requestId]
       );
     }
@@ -235,10 +235,10 @@ router.put('/registrations/:regId', async (req, res) => {
       const studentId = reg.studentID;
       
       // Ensure "The Rookie" badge exists
-      let [[badge]] = await connection.query('SELECT badgeID FROM Badge WHERE badgeName = "The Rookie"');
+      let [[badge]] = await connection.query("SELECT badgeID FROM Badge WHERE badgeName = 'The Rookie'");
       if (!badge) {
         const [badgeResult] = await connection.query(
-          'INSERT INTO Badge (badgeName, imageIcon, description, type) VALUES ("The Rookie", "🏅", "Completed your first session!", "achievement")'
+          "INSERT INTO Badge (badgeName, imageIcon, description, type) VALUES ('The Rookie', '🏅', 'Completed your first session!', 'achievement')"
         );
         badge = { badgeID: badgeResult.insertId };
       }
