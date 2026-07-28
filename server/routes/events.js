@@ -183,6 +183,17 @@ router.post('/:id/join', async (req, res) => {
   try {
     await connection.beginTransaction();
 
+    // Check if registration already exists
+    const [existing] = await connection.query(
+      'SELECT * FROM Registration WHERE sportID = ? AND studentID = ?',
+      [id, studentId]
+    );
+    
+    if (existing.length > 0) {
+      await connection.rollback();
+      return res.status(409).json({ error: 'You have already registered for this session.' });
+    }
+
     // 1. Insert registration record
     const [result] = await connection.query(
       'INSERT INTO Registration (sportID, studentID, participantCount, proofUrl, status) VALUES (?, ?, ?, ?, ?)',

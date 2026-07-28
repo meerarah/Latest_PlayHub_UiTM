@@ -21,7 +21,7 @@ export default function StudentJoinIn() {
 
   useEffect(() => {
     fetchSharedSessions();
-  }, []);
+  }, [user]);
 
   const fetchSharedSessions = async () => {
     setLoading(true);
@@ -41,6 +41,17 @@ export default function StudentJoinIn() {
         .filter(s => (s.currentPlayers || 1) < s.maxplayers)
         .sort((a, b) => a.date.localeCompare(b.date) || a.slot - b.slot);
 
+      // Fetch user's existing registrations
+      const joinedSportIds = new Set();
+      if (user?.uid) {
+        try {
+          const userRegs = await api.getStudentEventRegistrations(user.uid);
+          userRegs.forEach(r => joinedSportIds.add(r.sportid));
+        } catch (err) {
+          console.error("Error fetching user registrations:", err);
+        }
+      }
+
       // Group contiguous sessions
       const groupedSessions = [];
       
@@ -53,14 +64,20 @@ export default function StudentJoinIn() {
                    group.endSlot === session.slot;
         });
 
+        const isSessionJoined = joinedSportIds.has(session.id);
+
         if (existingGroupIndex !== -1) {
             groupedSessions[existingGroupIndex].endSlot = session.slot + 1;
             groupedSessions[existingGroupIndex].currentPlayers = Math.max(groupedSessions[existingGroupIndex].currentPlayers || 1, session.currentPlayers || 1);
+            if (isSessionJoined) {
+              groupedSessions[existingGroupIndex].isJoined = true;
+            }
             groupedSessions[existingGroupIndex].events.push(session);
         } else {
             groupedSessions.push({
                 ...session,
                 endSlot: session.slot + 1,
+                isJoined: isSessionJoined,
                 events: [session]
             });
         }
@@ -169,15 +186,20 @@ export default function StudentJoinIn() {
               </div>
 
               <button 
+                disabled={session.isJoined}
                 onClick={() => {
                   setSelectedSession(session);
                   setParticipants(1);
                   setStudentId("");
                 }}
-                className="w-full py-4 bg-brand-deep hover:bg-brand-deep/90 text-white font-black rounded-2xl transition-all flex items-center justify-center space-x-2 shadow-lg shadow-brand-deep/20"
+                className={`w-full py-4 font-black rounded-2xl transition-all flex items-center justify-center space-x-2 ${
+                  session.isJoined
+                    ? "bg-slate-100 text-slate-400 cursor-not-allowed"
+                    : "bg-brand-deep hover:bg-brand-deep/90 text-white shadow-lg shadow-brand-deep/20 cursor-pointer"
+                }`}
               >
-                <span>Join Session</span>
-                <ChevronRight className="w-4 h-4" />
+                <span>{session.isJoined ? "Joined" : "Join Session"}</span>
+                {!session.isJoined && <ChevronRight className="w-4 h-4" />}
               </button>
             </div>
           ))}
