@@ -175,6 +175,35 @@ app.listen(PORT, async () => {
       console.log('✅ Badges seeded.');
     }
 
+    // Seed sample Shared Sessions for upcoming dates if Sport_event is empty
+    const [eventRows] = await pool.query('SELECT COUNT(*) as count FROM Sport_event');
+    if (eventRows[0].count === 0) {
+      console.log('🌱 Seeding sample shared sessions...');
+      const d1 = new Date();
+      d1.setDate(d1.getDate() + 2);
+      const date1 = d1.toISOString().split('T')[0];
+
+      const d2 = new Date();
+      d2.setDate(d2.getDate() + 5);
+      const date2 = d2.toISOString().split('T')[0];
+
+      const sharedSessions = [
+        { sportname: "Futsal", venue: "Gelanggang Bola Sepak 5 Sebelah A", date: date1, time: "17:00", maxplayers: 10, currentPlayers: 3, difficultylevel: "Intermediate", type: "shared_session", status: "approved", slot: 17, courtID: 1 },
+        { sportname: "Futsal", venue: "Gelanggang Bola Sepak 5 Sebelah A", date: date1, time: "18:00", maxplayers: 10, currentPlayers: 3, difficultylevel: "Intermediate", type: "shared_session", status: "approved", slot: 18, courtID: 1 },
+        { sportname: "Badminton", venue: "Gelanggang Badminton A", date: date2, time: "20:00", maxplayers: 4, currentPlayers: 2, difficultylevel: "Beginner", type: "shared_session", status: "approved", slot: 20, courtID: 19 },
+        { sportname: "Badminton", venue: "Gelanggang Badminton A", date: date2, time: "21:00", maxplayers: 4, currentPlayers: 2, difficultylevel: "Beginner", type: "shared_session", status: "approved", slot: 21, courtID: 19 }
+      ];
+
+      for (const s of sharedSessions) {
+        await pool.query(
+          `INSERT INTO Sport_event (sportname, venue, date, time, maxplayers, currentPlayers, difficultylevel, type, status, slot, courtID)
+           VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
+          [s.sportname, s.venue, s.date, s.time, s.maxplayers, s.currentPlayers, s.difficultylevel, s.type, s.status, s.slot, s.courtID]
+        );
+      }
+      console.log('✅ Shared sessions seeded.');
+    }
+
     console.log('🎉 Database auto-initialization complete and fully linked!');
   } catch (error) {
     console.error('❌ Database auto-initialization failed:', error);

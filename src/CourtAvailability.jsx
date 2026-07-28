@@ -36,7 +36,8 @@ export default function CourtAvailability() {
     phone: "",
     participants: "",
     maxPlayers: "10",
-    duration: 1
+    duration: 1,
+    difficultylevel: "Beginner"
   });
 
   // Fetch active student profile data from Firestore to autofill the booking form
@@ -223,6 +224,7 @@ export default function CourtAvailability() {
               type: bookingMode,
               maxplayers: bookingMode === "full_court" ? selectedCourt.capacity : (parseInt(formData.maxPlayers) || 10),
               currentPlayers: parseInt(formData.participants) || 1,
+              difficultylevel: formData.difficultylevel || "Beginner",
               studentid: user.uid,
               studentName: formData.fullName,
               matrixId: formData.matrixId,
@@ -515,18 +517,33 @@ export default function CourtAvailability() {
                       </div>
 
                       {bookingMode === "shared_session" && (
-                        <div>
-                          <label className="text-[10px] font-black uppercase tracking-widest text-brand-primary ml-2 mb-2 block">Max Capacity For Session *</label>
-                          <div className="flex items-center space-x-2">
-                             <input 
-                               type="number" 
-                               min={Math.max(1, parseInt(formData.participants) || 1)}
-                               placeholder="e.g. 10" 
-                               value={formData.maxPlayers}
-                               onChange={(e) => setFormData({...formData, maxPlayers: e.target.value})}
-                               className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-brand-primary"
-                             />
-                             <span className="text-xs text-slate-400 font-bold">Person</span>
+                        <div className="space-y-4">
+                          <div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-brand-primary ml-2 mb-2 block">Max Capacity For Session *</label>
+                            <div className="flex items-center space-x-2">
+                               <input 
+                                 type="number" 
+                                 min={Math.max(1, parseInt(formData.participants) || 1)}
+                                 placeholder="e.g. 10" 
+                                 value={formData.maxPlayers}
+                                 onChange={(e) => setFormData({...formData, maxPlayers: e.target.value})}
+                                 className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-brand-primary"
+                               />
+                               <span className="text-xs text-slate-400 font-bold">Person</span>
+                            </div>
+                          </div>
+
+                          <div>
+                            <label className="text-[10px] font-black uppercase tracking-widest text-brand-primary ml-2 mb-2 block">Skill / Difficulty Level *</label>
+                            <select
+                              value={formData.difficultylevel || "Beginner"}
+                              onChange={(e) => setFormData({...formData, difficultylevel: e.target.value})}
+                              className="w-full bg-slate-50 border border-slate-200 rounded-xl px-4 py-3 text-sm font-bold text-slate-700 outline-none focus:ring-2 focus:ring-brand-primary cursor-pointer"
+                            >
+                              <option value="Beginner">Beginner (Casual / Open for all)</option>
+                              <option value="Intermediate">Intermediate (Moderate skill)</option>
+                              <option value="Advanced">Advanced (Competitive match)</option>
+                            </select>
                           </div>
                         </div>
                       )}

@@ -11,6 +11,7 @@ export default function StudentJoinIn() {
   const { user } = useAuth();
   const [sessions, setSessions] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDifficulty, setSelectedDifficulty] = useState("All");
   
   // Join Modal State
   const [selectedSession, setSelectedSession] = useState(null);
@@ -132,6 +133,10 @@ export default function StudentJoinIn() {
     }
   };
 
+  const filteredSessions = selectedDifficulty === "All"
+    ? sessions
+    : sessions.filter(s => (s.difficultylevel || "Beginner").toLowerCase() === selectedDifficulty.toLowerCase());
+
   return (
     <div className="space-y-6 pb-10 animate-in fade-in duration-500">
       <div className="flex flex-col space-y-2">
@@ -139,20 +144,37 @@ export default function StudentJoinIn() {
         <p className="text-sm text-slate-500">Find open sessions and play with others!</p>
       </div>
 
+      {/* Skill Level Filter Bar */}
+      <div className="flex space-x-2 overflow-x-auto pb-1 custom-scrollbar">
+        {["All", "Beginner", "Intermediate", "Advanced"].map((level) => (
+          <button
+            key={level}
+            onClick={() => setSelectedDifficulty(level)}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all whitespace-nowrap ${
+              selectedDifficulty === level
+                ? "bg-brand-primary text-white shadow-md shadow-brand-primary/20"
+                : "bg-white text-slate-500 hover:bg-slate-50 border border-slate-100"
+            }`}
+          >
+            {level}
+          </button>
+        ))}
+      </div>
+
       {loading ? (
         <div className="flex justify-center p-12">
           <Loader2 className="w-8 h-8 text-brand-primary animate-spin" />
         </div>
-      ) : sessions.length === 0 ? (
+      ) : filteredSessions.length === 0 ? (
         <div className="text-center py-16 bg-white rounded-[32px] border border-slate-100 shadow-sm">
           <div className="w-16 h-16 bg-slate-50 text-slate-400 rounded-full flex items-center justify-center mx-auto mb-4">
             <Search className="w-8 h-8" />
           </div>
-          <p className="text-slate-500 font-bold">No open sessions available right now.</p>
+          <p className="text-slate-500 font-bold">No {selectedDifficulty !== "All" ? selectedDifficulty.toLowerCase() : "open"} sessions available right now.</p>
         </div>
       ) : (
         <div className="space-y-4">
-          {sessions.map((session) => (
+          {filteredSessions.map((session) => (
             <div key={session.events.map(e => e.id).join('-')} className="bg-white p-5 rounded-[32px] border border-slate-100 shadow-sm flex flex-col relative overflow-hidden group">
               <div className="absolute top-0 right-0 bg-brand-primary/10 text-brand-primary font-black text-[10px] uppercase px-4 py-1.5 rounded-bl-[16px] tracking-widest">
                 {session.sportname}
@@ -161,6 +183,17 @@ export default function StudentJoinIn() {
               <div className="flex justify-between items-start mb-4">
                 <div>
                   <h3 className="font-black text-brand-deep text-lg pr-16">{session.venue}</h3>
+                  <div className="flex items-center space-x-2 mt-2">
+                    <span className={`px-2.5 py-0.5 rounded-md text-[9px] font-black uppercase tracking-wider border ${
+                      (session.difficultylevel || 'Beginner').toLowerCase() === 'beginner' 
+                        ? 'bg-green-50 text-green-700 border-green-200'
+                        : (session.difficultylevel || '').toLowerCase() === 'intermediate'
+                        ? 'bg-amber-50 text-amber-700 border-amber-200'
+                        : 'bg-red-50 text-red-700 border-red-200'
+                    }`}>
+                      {session.difficultylevel || 'Beginner'}
+                    </span>
+                  </div>
                   <div className="flex items-center space-x-3 text-xs font-bold text-slate-400 mt-2">
                     <span className="flex items-center"><Calendar className="w-3 h-3 mr-1" /> {session.date}</span>
                     <span className="flex items-center"><Clock className="w-3 h-3 mr-1" /> {session.endSlot ? `${formatHour(session.slot)} - ${formatHour(session.endSlot)}` : formatHour(session.slot)}</span>
