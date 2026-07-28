@@ -37,10 +37,9 @@ router.post('/', async (req, res) => {
   }
 
   try {
-    // Auto-upsert user record to satisfy foreign key constraint
+    // Ensure user record exists in users table to satisfy foreign key constraint
     await pool.query(
-      `INSERT INTO users (id, fullname, email, role) VALUES (?, 'Student', CONCAT(?, '@student.uitm.edu.my'), 'student')
-       ON DUPLICATE KEY UPDATE id = VALUES(id)`,
+      `INSERT IGNORE INTO users (id, fullname, email, role) VALUES (?, 'Student', CONCAT(?, '_notif@student.uitm.edu.my'), 'student')`,
       [userId, userId]
     );
 
