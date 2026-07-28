@@ -947,7 +947,7 @@ export default function AdminDashboard() {
                                      <X className="w-3.5 h-3.5 mr-1" /> Reject
                                   </button>
                                 </div>
-                             ) : (
+                             ) : selectedEventParticipants?.type === 'event' ? (
                                 <button
                                   disabled={updatingParticipant === p.id}
                                   onClick={() => markAsCompleted(p.id, p.studentid)}
@@ -956,6 +956,11 @@ export default function AdminDashboard() {
                                    {updatingParticipant === p.id ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Award className="w-4 h-4 mr-2" />}
                                    Complete Match
                                 </button>
+                             ) : (
+                                <div className="flex items-center space-x-1.5 text-emerald-600 bg-emerald-50 border border-emerald-100/60 px-3 py-1.5 rounded-xl text-[10px] font-black uppercase tracking-wider">
+                                   <CheckCircle2 className="w-3.5 h-3.5" />
+                                   <span>Joined Player</span>
+                                </div>
                              )}
                           </div>
                        ))}
@@ -964,24 +969,30 @@ export default function AdminDashboard() {
               </div>
               
               <div className="mt-8 pt-6 border-t border-white/40 flex flex-col sm:flex-row sm:justify-between items-center gap-4">
-                 <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
-                    <button
-                      disabled={participantsList.length === 0}
-                      onClick={() => downloadEMeritReport('College')}
-                      className="inline-flex items-center justify-center space-x-2 bg-admin-accent hover:bg-admin-accent/90 disabled:bg-admin-card disabled:text-admin-text/30 disabled:border-transparent border border-white/20 text-white px-5 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
-                    >
-                       <Download className="w-4 h-4" />
-                       <span>Export Excel for College Students</span>
-                    </button>
-                    <button
-                      disabled={participantsList.length === 0}
-                      onClick={() => downloadEMeritReport('NR')}
-                      className="inline-flex items-center justify-center space-x-2 bg-admin-card hover:bg-white/60 disabled:bg-admin-card disabled:text-admin-text/30 disabled:border-transparent border border-white/40 text-admin-text px-5 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
-                    >
-                       <Download className="w-4 h-4 text-admin-accent" />
-                       <span>Export Excel for NR Students</span>
-                    </button>
-                 </div>
+                 {selectedEventParticipants?.type === 'event' ? (
+                   <div className="flex flex-col sm:flex-row gap-3 w-full sm:w-auto">
+                      <button
+                        disabled={participantsList.length === 0}
+                        onClick={() => downloadEMeritReport('College')}
+                        className="inline-flex items-center justify-center space-x-2 bg-admin-accent hover:bg-admin-accent/90 disabled:bg-admin-card disabled:text-admin-text/30 disabled:border-transparent border border-white/20 text-white px-5 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
+                      >
+                         <Download className="w-4 h-4" />
+                         <span>Export Excel for College Students</span>
+                      </button>
+                      <button
+                        disabled={participantsList.length === 0}
+                        onClick={() => downloadEMeritReport('NR')}
+                        className="inline-flex items-center justify-center space-x-2 bg-admin-card hover:bg-white/60 disabled:bg-admin-card disabled:text-admin-text/30 disabled:border-transparent border border-white/40 text-admin-text px-5 py-3.5 rounded-2xl font-black text-xs uppercase tracking-wider transition-all active:scale-95 cursor-pointer"
+                      >
+                         <Download className="w-4 h-4 text-admin-accent" />
+                         <span>Export Excel for NR Students</span>
+                      </button>
+                   </div>
+                 ) : (
+                   <p className="text-[11px] font-bold text-admin-text/50 italic">
+                      * Standard court bookings & shared sessions do not issue e-certificates.
+                   </p>
+                 )}
                  <button 
                    onClick={() => setShowParticipantModal(false)}
                    className="w-full sm:w-auto px-8 py-3.5 bg-admin-card text-admin-text font-black rounded-2xl hover:bg-white/60 shadow-sm transition-colors text-xs uppercase tracking-widest"
