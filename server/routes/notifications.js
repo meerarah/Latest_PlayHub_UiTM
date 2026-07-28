@@ -38,10 +38,14 @@ router.post('/', async (req, res) => {
 
   try {
     // Ensure user record exists in users table to satisfy foreign key constraint
-    await pool.query(
-      `INSERT IGNORE INTO users (id, fullname, email, role) VALUES (?, 'Student', CONCAT(?, '_notif@student.uitm.edu.my'), 'student')`,
-      [userId, userId]
-    );
+    try {
+      await pool.query(
+        `INSERT IGNORE INTO users (id, fullname, email, role) VALUES (?, 'Student', CONCAT(?, '_notif@student.uitm.edu.my'), 'student')`,
+        [userId, userId]
+      );
+    } catch (uErr) {
+      console.warn('User pre-insert warning:', uErr.message);
+    }
 
     const [result] = await pool.query(
       'INSERT INTO notifications (userID, title, message, type, status) VALUES (?, ?, ?, ?, ?)',
@@ -57,7 +61,7 @@ router.post('/', async (req, res) => {
     });
   } catch (error) {
     console.error('Error creating notification:', error);
-    res.status(500).json({ error: error.message || 'Database error creating notification' });
+    res.status(500).json({ error: error.message || String(error) });
   }
 });
 
