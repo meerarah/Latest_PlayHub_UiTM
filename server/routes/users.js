@@ -132,10 +132,11 @@ router.get('/:id/badges', async (req, res) => {
       );
 
       if (hasCompletedTournament || pastBookings.length > 0) {
-        let [[badge]] = await connection.query('SELECT badgeID FROM Badge WHERE badgeName = "The Rookie"');
+        let [[badge]] = await connection.query('SELECT badgeID FROM Badge WHERE badgeName = ?', ['The Rookie']);
         if (!badge) {
           const [badgeResult] = await connection.query(
-            'INSERT INTO Badge (badgeName, imageIcon, description, type) VALUES ("The Rookie", "🏅", "Completed your first session!", "achievement")'
+            'INSERT INTO Badge (badgeName, imageIcon, description, type) VALUES (?, ?, ?, ?)',
+            ['The Rookie', '🏅', 'Completed your first session!', 'achievement']
           );
           badge = { badgeID: badgeResult.insertId };
         }
@@ -192,10 +193,11 @@ router.get('/:id/badges', async (req, res) => {
       }
 
       if (pastShared.length > 0 || joinedTournamentTeam) {
-        let [[badge]] = await connection.query('SELECT badgeID FROM Badge WHERE badgeName = "Team Player"');
+        let [[badge]] = await connection.query('SELECT badgeID FROM Badge WHERE badgeName = ?', ['Team Player']);
         if (!badge) {
           const [badgeResult] = await connection.query(
-            'INSERT INTO Badge (badgeName, imageIcon, description, type) VALUES ("Team Player", "🤝", "Joined a shared session.", "social")'
+            'INSERT INTO Badge (badgeName, imageIcon, description, type) VALUES (?, ?, ?, ?)',
+            ['Team Player', '🤝', 'Joined a shared session.', 'social']
           );
           badge = { badgeID: badgeResult.insertId };
         }
@@ -231,10 +233,11 @@ router.get('/:id/badges', async (req, res) => {
 
       const totalCompleted = (tournCountRow.count || 0) + (bookingsCountRow.count || 0);
       if (totalCompleted >= 5) {
-        let [[badge]] = await connection.query('SELECT badgeID FROM Badge WHERE badgeName = "Court Legend"');
+        let [[badge]] = await connection.query('SELECT badgeID FROM Badge WHERE badgeName = ?', ['Court Legend']);
         if (!badge) {
           const [badgeResult] = await connection.query(
-            'INSERT INTO Badge (badgeName, imageIcon, description, type) VALUES ("Court Legend", "🏛️", "Completed 5 sessions.", "loyalty")'
+            'INSERT INTO Badge (badgeName, imageIcon, description, type) VALUES (?, ?, ?, ?)',
+            ['Court Legend', '🏛️', 'Completed 5 sessions.', 'loyalty']
           );
           badge = { badgeID: badgeResult.insertId };
         }
