@@ -104,6 +104,7 @@ export default function TournamentRequest() {
             className="w-full bg-slate-50 border border-slate-200 rounded-2xl px-5 py-4 outline-none focus:ring-2 focus:ring-brand-primary font-bold text-slate-700 appearance-none"
           >
             <option value="Futsal">Futsal</option>
+            <option value="Badminton">Badminton</option>
             <option value="Basketball">Basketball</option>
             <option value="Lawn Bowls">Lawn Bowls</option>
             <option value="Cricket">Cricket</option>
