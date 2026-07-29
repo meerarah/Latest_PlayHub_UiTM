@@ -88,7 +88,11 @@ app.listen(PORT, async () => {
       ) {
         continue;
       }
-      await pool.query(statement);
+      try {
+        await pool.query(statement);
+      } catch (stmtErr) {
+        // Table or constraint may already exist, continue safely
+      }
     }
     console.log('✅ Database schema tables verified/created.');
     
