@@ -122,44 +122,12 @@ export default function Profile() {
          setProfile(null);
       }
 
-      // 2. Fetch Certificates (Completed Registrations) from MySQL
-      let enrichedCerts = [];
-      try {
-        const regs = await api.getStudentEventRegistrations(user.uid);
-        
-        // Count as completed if status is 'completed' OR if status is 'approved' and the time slot has passed
-        const todayObj = new Date();
-        const yyyy = todayObj.getFullYear();
-        const mm = String(todayObj.getMonth() + 1).padStart(2, '0');
-        const dd = String(todayObj.getDate()).padStart(2, '0');
-        const todayStr = `${yyyy}-${mm}-${dd}`;
-        const currentHour = todayObj.getHours();
-
-        const completedRegs = regs.filter(r => {
-          if (r.status === 'completed') return true;
-          if (r.status === 'approved') {
-            const ev = r.Sport_event;
-            if (!ev) return false;
-            const endHour = ev.slot ? ev.slot + 1 : 24;
-            if (ev.date < todayStr) return true;
-            if (ev.date === todayStr && endHour <= currentHour) return true;
-          }
-          return false;
-        });
-
-        enrichedCerts = completedRegs.map(reg => ({
-          ...reg,
-          type: 'session'
-        }));
-      } catch (mysqlErr) {
-        console.error("Error loading event certificates from MySQL:", mysqlErr.message);
-      }
-
-      // Fetch completed tournament registrations from MySQL
+      // 2. Fetch Certificates (TOURNAMENTS ONLY) from MySQL
       let enrichedTCerts = [];
       try {
         const regs = await api.getStudentTournamentRegistrations(user.uid, matrixId);
-        const completedRegs = regs.filter(r => r.status === 'completed');
+        // E-Certificates are issued ONLY for Tournaments (approved or completed)
+        const completedRegs = regs.filter(r => r.status === 'completed' || r.status === 'approved');
         enrichedTCerts = completedRegs.map(reg => ({
           ...reg,
           type: 'tournament',
@@ -173,7 +141,8 @@ export default function Profile() {
         console.error("Error loading tournament certificates from MySQL:", mysqlErr.message);
       }
 
-      setCertificates([...enrichedCerts, ...enrichedTCerts]);
+      // Set certificates ONLY for tournaments as per requirements
+      setCertificates(enrichedTCerts);
 
       // 3. Fetch Badges from MySQL
       try {
