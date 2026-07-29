@@ -42,7 +42,7 @@ app.get('/api/debug', async (req, res) => {
     const tableList = tables.map(t => Object.values(t)[0]);
     res.json({
       status: 'online',
-      version: '1.0.6-notif-fix',
+      version: '1.0.7-badge-fix',
       cwd: process.cwd(),
       schemaLocalExists: fs.existsSync(path.join(process.cwd(), 'schema_mysql.sql')),
       schemaParentExists: fs.existsSync(path.join(process.cwd(), '../schema_mysql.sql')),
