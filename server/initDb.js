@@ -86,7 +86,7 @@ async function init() {
       const tournaments = [
         { name: "Piala Dekan Futsal Tournament 2026", sport: "Futsal", date: "2026-08-20", time: "08:00 AM - 05:00 PM", venue: "Arena 1 (Gelanggang Futsal)", maxTeams: 8, description: "Official inter-faculty futsal championship. Register your team now and win cash prizes!" },
         { name: "UiTM Badminton Doubles Open", sport: "Badminton", date: "2026-09-12", time: "09:00 AM - 04:00 PM", venue: "Arena 6 (Gelanggang Badminton)", maxTeams: 16, description: "Open doubles tournament. Compete with top campus teams. Certificates provided for all participants!" },
-        { name: "Pusat Sukan Lawn Bowls Championship", sport: "Lawn Bowls", date: "2026-10-18", time: "10:00 AM - 06:00 PM", venue: "Arena 2 (Boling Padang Rink)", maxTeams: 6, description: "Lawn Bowls tournament for resident and non-resident students. Equipment provided." }
+        { name: "Kejohanan Boling Padang UiTM 2026", sport: "Lawn Bowls", date: "2026-07-18", time: "08:30 AM - 05:00 PM", venue: "Arena 2 (Gelanggang Boling Padang)", maxTeams: 6, description: "Official Lawn Bowls Inter-Team Tournament at Arena 2." }
       ];
       for (const t of tournaments) {
         await pool.query(
