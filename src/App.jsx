@@ -101,6 +101,8 @@ function AppRoutes() {
           }
         >
           <Route index element={<AdminDashboard />} />
+          <Route path="availability" element={<Availability />} />
+          <Route path="join-in" element={<StudentJoinIn />} />
           <Route path="tournaments" element={<AdminTournaments />} />
           <Route path="feedback" element={<AdminFeedback />} />
           <Route path="settings" element={<AdminSettings />} />

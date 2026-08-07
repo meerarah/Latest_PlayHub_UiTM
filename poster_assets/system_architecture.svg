@@ -1,0 +1,161 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="900" height="550" viewBox="0 0 900 550">
+  <defs>
+    <!-- Drop Shadow Filter for Cards -->
+    <filter id="shadow" x="-5%" y="-5%" width="110%" height="115%" filterUnits="userSpaceOnUse">
+      <feGaussianBlur in="SourceAlpha" stdDeviation="4" />
+      <feOffset dx="0" dy="3" />
+      <feComponentTransfer><feFuncA type="linear" slope="0.15" /></feComponentTransfer>
+      <feMerge>
+        <feMergeNode />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    <!-- Arrow Marker -->
+    <marker id="arrow" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#3B1358" />
+    </marker>
+    
+    <marker id="arrow-gold" viewBox="0 0 10 10" refX="6" refY="5" markerWidth="6" markerHeight="6" orient="auto-start-reverse">
+      <path d="M 0 1.5 L 8 5 L 0 8.5 z" fill="#D89E00" stroke="#D89E00" />
+    </marker>
+  </defs>
+
+  <style>
+    .layer-title { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 13px; font-weight: 800; letter-spacing: 1px; fill: #3B1358; }
+    .card-title { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 14px; font-weight: 700; fill: #3B1358; }
+    .card-subtitle { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; fill: #616161; font-weight: 500; }
+    .arrow-text { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 11px; font-weight: 700; fill: #5E17EB; }
+    .badge { font-family: 'Helvetica Neue', Arial, sans-serif; font-size: 9px; font-weight: 800; fill: #FFFFFF; }
+  </style>
+
+  <!-- BACKGROUND GRID (Subtle) -->
+  <rect width="900" height="550" fill="#FAFAFA" rx="15" stroke="#E0E0E0" stroke-width="1"/>
+
+  <!-- ========================================== -->
+  <!-- PRESENTATION LAYER (FRONTEND)              -->
+  <!-- ========================================== -->
+  <!-- Group Border -->
+  <rect x="40" y="30" width="820" height="135" rx="10" fill="#5E17EB" fill-opacity="0.03" stroke="#5E17EB" stroke-width="1.5" stroke-dasharray="6 4" />
+  <text x="55" y="55" class="layer-title">PRESENTATION LAYER (Frontend - Hosted on Vercel)</text>
+
+  <!-- React Web App Card -->
+  <g transform="translate(150, 75)" filter="url(#shadow)">
+    <rect width="240" height="70" rx="8" fill="#FFFFFF" stroke="#5E17EB" stroke-width="2" />
+    <!-- Mini Icon Representing Web -->
+    <circle cx="30" cy="35" r="16" fill="#F3E8FF" />
+    <path d="M 23 35 C 23 31, 37 31, 37 35 C 37 39, 23 39, 23 35" stroke="#5E17EB" stroke-width="1.5" fill="none" transform="rotate(30 30 35)" />
+    <path d="M 23 35 C 23 31, 37 31, 37 35 C 37 39, 23 39, 23 35" stroke="#5E17EB" stroke-width="1.5" fill="none" transform="rotate(90 30 35)" />
+    <path d="M 23 35 C 23 31, 37 31, 37 35 C 37 39, 23 39, 23 35" stroke="#5E17EB" stroke-width="1.5" fill="none" transform="rotate(150 30 35)" />
+    <!-- Text -->
+    <text x="60" y="33" class="card-title">React.js Web App</text>
+    <text x="60" y="49" class="card-subtitle">Responsive UI Components</text>
+    <text x="60" y="60" class="card-subtitle">Leaflet Maps integration</text>
+  </g>
+
+  <!-- PWA Card -->
+  <g transform="translate(510, 75)" filter="url(#shadow)">
+    <rect width="240" height="70" rx="8" fill="#FFFFFF" stroke="#5E17EB" stroke-width="2" />
+    <!-- Mini Icon PWA -->
+    <circle cx="30" cy="35" r="16" fill="#F3E8FF" />
+    <rect x="23" y="25" width="14" height="20" rx="2" fill="none" stroke="#5E17EB" stroke-width="1.5"/>
+    <line x1="27" x2="33" y1="41" y2="41" stroke="#5E17EB" stroke-width="1.5"/>
+    <!-- Text -->
+    <text x="60" y="33" class="card-title">Progressive Web App</text>
+    <text x="60" y="49" class="card-subtitle">Mobile-First PWA Support</text>
+    <text x="60" y="60" class="card-subtitle">Installable on Android / iOS</text>
+  </g>
+
+
+  <!-- ========================================== -->
+  <!-- APPLICATION LAYER (MIDDLEWARE)             -->
+  <!-- ========================================== -->
+  <!-- Group Border -->
+  <rect x="230" y="215" width="440" height="120" rx="10" fill="#8C52FF" fill-opacity="0.03" stroke="#8C52FF" stroke-width="1.5" stroke-dasharray="6 4" />
+  <text x="245" y="238" class="layer-title">APPLICATION LAYER (Middleware - Hosted on Render)</text>
+
+  <!-- Node/Express Server Card -->
+  <g transform="translate(300, 250)" filter="url(#shadow)">
+    <rect width="300" height="65" rx="8" fill="#FFFFFF" stroke="#8C52FF" stroke-width="2" />
+    <!-- Server Icon -->
+    <circle cx="35" cy="32" r="16" fill="#F3E8FF" />
+    <rect x="27" y="24" width="16" height="16" rx="2" fill="none" stroke="#8C52FF" stroke-width="1.5"/>
+    <circle cx="31" cy="28" r="1.5" fill="#8C52FF"/>
+    <circle cx="31" cy="36" r="1.5" fill="#8C52FF"/>
+    <line x1="36" x2="40" y1="28" y2="28" stroke="#8C52FF" stroke-width="1.5"/>
+    <line x1="36" x2="40" y1="36" y2="36" stroke="#8C52FF" stroke-width="1.5"/>
+    <!-- Text -->
+    <text x="70" y="31" class="card-title">Node.js &amp; Express.js API</text>
+    <text x="70" y="47" class="card-subtitle">REST Endpoints, Matchmaking Logic</text>
+    <text x="70" y="58" class="card-subtitle">Tournament Management &amp; PDF generation</text>
+  </g>
+
+
+  <!-- ========================================== -->
+  <!-- DATA & STORAGE LAYER                       -->
+  <!-- ========================================== -->
+  <!-- Group Border -->
+  <rect x="40" y="380" width="820" height="135" rx="10" fill="#FFBD59" fill-opacity="0.03" stroke="#FFBD59" stroke-width="1.5" stroke-dasharray="6 4" />
+  <text x="55" y="405" class="layer-title">DATA &amp; STORAGE LAYER</text>
+
+  <!-- Firebase Card -->
+  <g transform="translate(150, 425)" filter="url(#shadow)">
+    <rect width="240" height="70" rx="8" fill="#FFFFFF" stroke="#FFBD59" stroke-width="2" />
+    <!-- Firebase Icon -->
+    <circle cx="30" cy="35" r="16" fill="#FFF8E1" />
+    <path d="M 20 44 L 30 20 L 33 26 z" fill="#FFA000" />
+    <path d="M 30 20 L 40 44 L 30 38 z" fill="#F57C00" />
+    <path d="M 20 44 L 30 38 L 40 44 z" fill="#FFCA28" />
+    <!-- Text -->
+    <text x="60" y="31" class="card-title">Firebase Services</text>
+    <text x="60" y="47" class="card-subtitle">Firebase Authentication</text>
+    <text x="60" y="58" class="card-subtitle">Cloud Storage (Photos &amp; Docs)</text>
+  </g>
+
+  <!-- MySQL Database Card -->
+  <g transform="translate(510, 425)" filter="url(#shadow)">
+    <rect width="240" height="70" rx="8" fill="#FFFFFF" stroke="#FFBD59" stroke-width="2" />
+    <!-- DB Icon -->
+    <circle cx="30" cy="35" r="16" fill="#FFF8E1" />
+    <path d="M 22 28 C 22 25, 38 25, 38 28 C 38 31, 22 31, 22 28 M 22 28 L 22 40 C 22 43, 38 43, 38 40 L 38 28" fill="none" stroke="#D89E00" stroke-width="1.5"/>
+    <path d="M 22 34 C 22 37, 38 37, 38 34" fill="none" stroke="#D89E00" stroke-width="1.5"/>
+    <!-- Text -->
+    <text x="60" y="31" class="card-title">MySQL Database</text>
+    <text x="60" y="47" class="card-subtitle">Hosted on Railway</text>
+    <text x="60" y="58" class="card-subtitle">Relational schemas (SQL Queries)</text>
+  </g>
+
+
+  <!-- ========================================== -->
+  <!-- CONNECTIONS & ARROWS                       -->
+  <!-- ========================================== -->
+
+  <!-- 1. Presentation -> Firebase (Auth & Media uploads) - Direct client-side connection -->
+  <path d="M 200, 145 L 200, 422" fill="none" stroke="#D89E00" stroke-width="2" stroke-dasharray="4 3" marker-end="url(#arrow-gold)" />
+  <g transform="translate(110, 205)">
+    <rect x="-10" y="-10" width="90" height="28" fill="#FAFAFA" rx="4" />
+    <text x="35" y="2" text-anchor="middle" class="arrow-text" fill="#D89E00" style="fill: #D89E00; font-size: 9px;">1. Client SDK Auth &amp;</text>
+    <text x="35" y="11" text-anchor="middle" class="arrow-text" fill="#D89E00" style="fill: #D89E00; font-size: 9px;">Media Uploads</text>
+  </g>
+
+  <!-- 2. Presentation -> Express API (React App) -->
+  <path d="M 330, 145 L 330, 200 L 400, 200 L 400, 247" fill="none" stroke="#3B1358" stroke-width="2" marker-end="url(#arrow)" />
+  <g transform="translate(325, 175)">
+    <rect x="-10" y="-8" width="95" height="16" fill="#FAFAFA" rx="4" />
+    <text x="37" y="4" class="arrow-text" style="font-size: 9px;">2. HTTPS API Requests</text>
+  </g>
+
+  <!-- 3. Presentation -> Express API (PWA App) -->
+  <path d="M 570, 145 L 570, 200 L 500, 200 L 500, 247" fill="none" stroke="#3B1358" stroke-width="2" marker-end="url(#arrow)" />
+  <g transform="translate(485, 175)">
+    <!-- Shared text label above -->
+  </g>
+
+  <!-- 4. Express Server -> MySQL DB -->
+  <path d="M 450, 315 L 450, 360 L 630, 360 L 630, 422" fill="none" stroke="#3B1358" stroke-width="2" marker-end="url(#arrow)" />
+  <g transform="translate(480, 345)">
+    <rect x="-10" y="-8" width="105" height="16" fill="#FAFAFA" rx="4" />
+    <text x="42" y="4" class="arrow-text" style="font-size: 9px;">3. Execute SQL Queries (TCP)</text>
+  </g>
+
+</svg>

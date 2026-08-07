@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Outlet, NavLink, useNavigate } from "react-router-dom";
-import { LayoutDashboard, MessageSquareShare, LogOut, Trophy, Settings, Menu, X } from "lucide-react";
+import { LayoutDashboard, MessageSquareShare, LogOut, Trophy, Settings, Menu, X, Calendar, Users } from "lucide-react";
 import { cn } from "../lib/utils";
 import { auth } from "../lib/firebase";
 import { signOut } from "firebase/auth";
@@ -16,6 +16,8 @@ export default function AdminLayout() {
 
   const links = [
     { name: "Dashboard", path: "/admin", icon: LayoutDashboard },
+    { name: "Court Availability", path: "/admin/availability", icon: Calendar },
+    { name: "Join-In Sessions", path: "/admin/join-in", icon: Users },
     { name: "Tournaments", path: "/admin/tournaments", icon: Trophy },
     { name: "Feedbacks", path: "/admin/feedback", icon: MessageSquareShare },
   ];

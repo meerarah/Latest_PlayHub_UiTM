@@ -83,6 +83,32 @@ export default function AdminDashboard() {
   const [fetchingParticipants, setFetchingParticipants] = useState(false);
   const [updatingParticipant, setUpdatingParticipant] = useState(null);
 
+  // Court Schedule Inspector State
+  const [selectedCourtForSchedule, setSelectedCourtForSchedule] = useState(null);
+  const [scheduleDate, setScheduleDate] = useState(new Date().toISOString().split('T')[0]);
+  const [courtScheduleEvents, setCourtScheduleEvents] = useState([]);
+  const [loadingCourtSchedule, setLoadingCourtSchedule] = useState(false);
+
+  const fetchCourtSchedule = async (courtId, dateStr) => {
+    setLoadingCourtSchedule(true);
+    try {
+      const data = await api.getEvents({ date: dateStr });
+      const filtered = data.filter(e => e.courtId === courtId && e.status !== 'rejected');
+      setCourtScheduleEvents(filtered);
+    } catch (e) {
+      console.error("Error fetching court schedule:", e);
+    } finally {
+      setLoadingCourtSchedule(false);
+    }
+  };
+
+  const openCourtScheduleModal = (court) => {
+    setSelectedCourtForSchedule(court);
+    const today = new Date().toISOString().split('T')[0];
+    setScheduleDate(today);
+    fetchCourtSchedule(court.id, today);
+  };
+
   const getSportCategory = (name) => {
      if (!name) return "Sport";
      const lower = name.toLowerCase();
@@ -656,6 +682,14 @@ export default function AdminDashboard() {
                       {c.arena && <p className="text-[9px] font-black text-admin-accent uppercase tracking-widest mb-1">{c.arena}</p>}
                       <h4 className="text-lg font-black text-admin-text leading-tight mb-2">{c.name}</h4>
                       <p className="text-xs font-bold text-admin-text/60">Capacity limit: {c.capacity} students / hour</p>
+                      
+                      <button 
+                        onClick={() => openCourtScheduleModal(c)}
+                        className="w-full mt-4 py-3 px-4 bg-admin-accent/10 hover:bg-admin-accent/20 text-admin-accent rounded-2xl text-xs font-black uppercase tracking-wider flex items-center justify-center space-x-2 transition-all active:scale-[0.98] cursor-pointer shadow-sm border border-admin-accent/15"
+                      >
+                        <CalendarIcon className="w-4 h-4" />
+                        <span>Inspect Schedule & Availability</span>
+                      </button>
                     </div>
                   </div>
                 ))}
@@ -1025,6 +1059,154 @@ export default function AdminDashboard() {
                    className="w-full sm:w-auto px-8 py-3.5 bg-admin-card text-admin-text font-black rounded-2xl hover:bg-white/60 shadow-sm transition-colors text-xs uppercase tracking-widest"
                  >
                    Close View
+                 </button>
+              </div>
+           </div>
+        </div>
+      )}
+
+      {/* Court Schedule Inspector Modal */}
+      {selectedCourtForSchedule && (
+        <div className="fixed inset-0 bg-admin-text/60 backdrop-blur-xl z-[60] flex items-center justify-center p-4">
+           <div className="bg-admin-panel border border-white/60 rounded-[40px] w-full max-w-3xl shadow-2xl p-8 animate-in zoom-in-95 duration-300 max-h-[90vh] flex flex-col">
+              {/* Header */}
+              <div className="flex justify-between items-start mb-6">
+                 <div className="flex items-center space-x-4">
+                    <div className="w-14 h-14 rounded-2xl overflow-hidden shrink-0 border border-white shadow-sm">
+                       <img src={selectedCourtForSchedule.image} alt={selectedCourtForSchedule.name} className="w-full h-full object-cover" />
+                    </div>
+                    <div>
+                       <div className="flex items-center space-x-2">
+                          <span className="text-[10px] font-black uppercase tracking-widest text-admin-accent bg-admin-accent/10 px-2.5 py-0.5 rounded-md">
+                             {selectedCourtForSchedule.sport}
+                          </span>
+                          <span className="text-xs font-bold text-admin-text/50">
+                             {selectedCourtForSchedule.arena || "Pusat Sukan"}
+                          </span>
+                       </div>
+                       <h3 className="font-black text-xl text-admin-text mt-1">{selectedCourtForSchedule.name}</h3>
+                    </div>
+                 </div>
+                 <button 
+                   onClick={() => setSelectedCourtForSchedule(null)} 
+                   className="text-admin-text/50 hover:bg-admin-card hover:text-admin-text p-2.5 rounded-2xl transition-all cursor-pointer"
+                 >
+                   <X className="w-6 h-6" />
+                 </button>
+              </div>
+
+              {/* Date Filter & Legend */}
+              <div className="flex flex-col sm:flex-row justify-between items-center bg-admin-card p-4 rounded-2xl border border-white/40 mb-6 gap-3">
+                 <div className="flex items-center space-x-2 w-full sm:w-auto">
+                    <CalendarIcon className="w-5 h-5 text-admin-accent" />
+                    <span className="text-xs font-black uppercase text-admin-text">Date:</span>
+                    <input 
+                      type="date" 
+                      value={scheduleDate}
+                      onChange={(e) => {
+                        setScheduleDate(e.target.value);
+                        fetchCourtSchedule(selectedCourtForSchedule.id, e.target.value);
+                      }}
+                      className="px-4 py-2 bg-white rounded-xl text-xs font-bold text-admin-text outline-none border border-slate-200 focus:ring-2 focus:ring-admin-accent shadow-sm"
+                    />
+                 </div>
+                 
+                 <div className="flex items-center space-x-3 text-[10px] font-black uppercase tracking-wider">
+                    <span className="flex items-center text-emerald-600"><span className="w-2.5 h-2.5 rounded-full bg-emerald-500 mr-1.5" /> Available</span>
+                    <span className="flex items-center text-red-500"><span className="w-2.5 h-2.5 rounded-full bg-red-500 mr-1.5" /> Booked</span>
+                    <span className="flex items-center text-blue-600"><span className="w-2.5 h-2.5 rounded-full bg-blue-500 mr-1.5" /> Shared</span>
+                 </div>
+              </div>
+
+              {/* Slots List */}
+              <div className="flex-1 overflow-y-auto pr-2 space-y-3 hide-scrollbar">
+                 {loadingCourtSchedule ? (
+                    <div className="flex justify-center p-12"><Loader2 className="w-8 h-8 text-admin-accent animate-spin" /></div>
+                 ) : (
+                    [8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 20, 21].map(hour => {
+                       const event = courtScheduleEvents.find(e => e.slot === hour);
+                       const isBooked = !!event;
+                       const isFullCourt = event && event.type === 'full_court';
+
+                       const formatHourRange = (h) => {
+                          const formatSingle = (val) => {
+                             const period = val >= 12 ? 'PM' : 'AM';
+                             let formattedH = val > 12 ? val - 12 : val;
+                             if (formattedH === 0) formattedH = 12;
+                             return `${formattedH}:00 ${period}`;
+                          };
+                          return `${formatSingle(h)} - ${formatSingle(h + 1)}`;
+                       };
+
+                       return (
+                          <div 
+                            key={hour} 
+                            className={cn(
+                               "p-4 rounded-2xl border flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 transition-all",
+                               !isBooked ? "bg-emerald-50/60 border-emerald-200/70" :
+                               isFullCourt ? "bg-red-50/60 border-red-200/70" : "bg-blue-50/60 border-blue-200/70"
+                            )}
+                          >
+                             <div className="flex items-center space-x-3">
+                                <div className={cn(
+                                   "px-3 py-1.5 rounded-xl text-xs font-black flex items-center space-x-1.5 shadow-sm",
+                                   !isBooked ? "bg-emerald-500 text-white" :
+                                   isFullCourt ? "bg-red-500 text-white" : "bg-blue-600 text-white"
+                                )}>
+                                   <Clock className="w-3.5 h-3.5" />
+                                   <span>{formatHourRange(hour)}</span>
+                                </div>
+
+                                <div>
+                                   <h5 className="text-xs font-black text-admin-text">
+                                      {!isBooked ? "🟢 Available (Not Booked Yet)" :
+                                       isFullCourt ? `🔴 Booked by ${event.studentName || 'Student'}` :
+                                       `🔵 Shared Join-In: ${event.sportname || 'Session'}`}
+                                   </h5>
+                                   {event && (
+                                      <p className="text-[10px] font-bold text-admin-text/60 mt-0.5">
+                                         {isFullCourt ? `Student ID: ${event.studentid ? event.studentid.slice(0, 10) : 'N/A'} • Status: ${event.status || 'Approved'}` :
+                                          `Players: ${event.currentPlayers || 1}/${event.maxplayers || 10} • Level: ${event.difficultylevel || 'Beginner'}`}
+                                      </p>
+                                   )}
+                                </div>
+                             </div>
+
+                             <div className="flex items-center space-x-2">
+                                {!isBooked ? (
+                                   <span className="px-3 py-1 bg-emerald-100 text-emerald-700 rounded-lg text-[10px] font-black uppercase tracking-wider">
+                                      Available
+                                   </span>
+                                ) : (
+                                   <div className="flex items-center space-x-2">
+                                      <span className={cn(
+                                         "px-3 py-1 rounded-lg text-[10px] font-black uppercase tracking-wider border",
+                                         event.status === 'pending' ? "bg-amber-100 text-amber-700 border-amber-200" : "bg-white text-admin-text border-slate-200"
+                                      )}>
+                                         {event.status || 'Approved'}
+                                      </span>
+                                      <button 
+                                        onClick={() => handleDeleteBooking(event)} 
+                                        className="p-1.5 bg-red-100 hover:bg-red-200 text-red-600 rounded-lg transition-colors cursor-pointer"
+                                        title="Delete booking"
+                                      >
+                                        <Trash2 className="w-3.5 h-3.5" />
+                                      </button>
+                                   </div>
+                                )}
+                             </div>
+                          </div>
+                       );
+                    })
+                 )}
+              </div>
+
+              <div className="mt-6 pt-4 border-t border-white/40 flex justify-end">
+                 <button 
+                   onClick={() => setSelectedCourtForSchedule(null)}
+                   className="px-6 py-3 bg-admin-card text-admin-text font-black rounded-2xl hover:bg-white/60 shadow-sm transition-colors text-xs uppercase tracking-widest cursor-pointer"
+                 >
+                   Close Schedule
                  </button>
               </div>
            </div>
