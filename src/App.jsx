@@ -22,6 +22,8 @@ import TournamentDetails from "./TournamentDetails";
 import StudentTournaments from "./StudentTournaments";
 
 import AdminDashboard from "./AdminDashboard";
+import AdminAvailability from "./AdminAvailability";
+import AdminJoinIn from "./AdminJoinIn";
 import AdminTournaments from "./AdminTournaments";
 import AdminFeedback from "./AdminFeedback";
 import AdminSettings from "./AdminSettings";
@@ -101,8 +103,8 @@ function AppRoutes() {
           }
         >
           <Route index element={<AdminDashboard />} />
-          <Route path="availability" element={<Availability />} />
-          <Route path="join-in" element={<StudentJoinIn />} />
+          <Route path="availability" element={<AdminAvailability />} />
+          <Route path="join-in" element={<AdminJoinIn />} />
           <Route path="tournaments" element={<AdminTournaments />} />
           <Route path="feedback" element={<AdminFeedback />} />
           <Route path="settings" element={<AdminSettings />} />
