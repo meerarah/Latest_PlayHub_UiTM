@@ -101,29 +101,7 @@ export default function AdminAvailability() {
         </div>
       </div>
 
-      {/* Summary KPI Cards */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-        <div className="bg-admin-card p-5 rounded-[24px] border border-white/40 shadow-sm">
-          <p className="text-admin-text/50 font-black text-[10px] uppercase tracking-wider">Total Facilities</p>
-          <h4 className="text-2xl font-black text-admin-text mt-1">{courts.length} Courts</h4>
-          <p className="text-[10px] text-admin-text/40 font-bold mt-1">Across all Arenas</p>
-        </div>
-        <div className="bg-emerald-500/10 p-5 rounded-[24px] border border-emerald-500/20 shadow-sm">
-          <p className="text-emerald-700 font-black text-[10px] uppercase tracking-wider">Open Available Slots</p>
-          <h4 className="text-2xl font-black text-emerald-700 mt-1">{availableSlotsCount} Slots</h4>
-          <p className="text-[10px] text-emerald-600 font-bold mt-1">Ready for booking</p>
-        </div>
-        <div className="bg-red-500/10 p-5 rounded-[24px] border border-red-500/20 shadow-sm">
-          <p className="text-red-700 font-black text-[10px] uppercase tracking-wider">Full Court Bookings</p>
-          <h4 className="text-2xl font-black text-red-700 mt-1">{fullBookingsCount} Booked</h4>
-          <p className="text-[10px] text-red-600 font-bold mt-1">Private reservations</p>
-        </div>
-        <div className="bg-blue-500/10 p-5 rounded-[24px] border border-blue-500/20 shadow-sm">
-          <p className="text-blue-700 font-black text-[10px] uppercase tracking-wider">Join-In Sessions</p>
-          <h4 className="text-2xl font-black text-blue-700 mt-1">{sharedSessionsCount} Active</h4>
-          <p className="text-[10px] text-blue-600 font-bold mt-1">Shared group sessions</p>
-        </div>
-      </div>
+
 
       {/* Filter & Search Bar */}
       <div className="flex flex-col md:flex-row justify-between items-center bg-admin-card p-4 rounded-[28px] border border-white/40 gap-4">
